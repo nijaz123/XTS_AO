@@ -1,0 +1,330 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.8">
+  <POU Name="Mover" Id="{b27d7938-4edc-0d0f-18b2-976fa3f91cf1}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK Mover
+VAR_INPUT
+	Enable			: BOOL;				// Request mover enable
+	toStart			: BOOL;				// Request mover go to start position
+	toNext			: BOOL;				// Request mover go to next station	
+	toStop			: BOOL;				// Request mover to stop - meaning the movers will be stop, removed from group, and power will be shutdown to the track via an E-Stop or HMI.Stop		
+	toDisable		: BOOL;				// Request mover to disable power	
+	toPause			: BOOL;				// Request movers to pause in place
+END_VAR
+VAR_OUTPUT
+	Enabled			: BOOL;				// Mover confirmed enabled
+	Ready			: BOOL;				// Mover is enabled and ready to accept motion commands
+	Busy			: BOOL;				// Mover is processing a command or changing state
+	Position		: LREAL;			// Current mover position
+	Velocity		: LREAL;			// Current mover velocity                                	
+	Error			: UDINT;			// errorID of the active error
+	Step			: MoverSequence;	// Mover's step within sequence                                	
+	AxisReference	: AXIS_REF;			// Motion link variable. Left as output so the link can be made directly, and accessed by external code
+	TargetStation	: USINT;
+END_VAR
+VAR
+	// Motion commands
+	fbPower			: MC_Power;
+	fbReset			: MC_Reset;
+	fbHaltCA		: MC_HaltCA;
+	fbMoveAbsCA		: MC_MoveAbsoluteCA;
+	
+	//Temporary for Testing
+	iInteger	: INT;
+	
+	bdummy: BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* this function block handles each Mover's axis *)
+
+// feedback
+
+	AxisReference.ReadStatus();
+
+	Enabled		:= NOT AxisReference.Status.Disabled;
+	Ready		:= AxisReference.Status.NotMoving AND NOT AxisReference.Status.Error;
+	Busy		:= AxisReference.Status.Moving;
+	Position	:= AxisReference.NcToPlc.ModuloActPos;
+	Velocity	:= AxisReference.NcToPlc.ActVelo;
+	Error		:= AxisReference.NcToPlc.ErrorCode;
+	
+
+	IF toStop OR toPause THEN
+		fbMoveAbsCA.Execute		:= FALSE;
+		fbHaltCA.Execute 		:= TRUE;
+		fbHaltCA.Deceleration 	:= 1E4;
+		IF toStop THEN
+			Step := MoverSequence.Stopping;
+		ELSIF toPause THEN
+			Step := MoverSequence.Pausing;
+		END_IF
+	END_IF
+	
+(*
+	IF bdummy THEN
+		fbPower.Enable_Positive := TRUE;
+		fbPower.Enable := TRUE;
+	ELSE
+		fbPower.Enable_Positive := FALSE;
+		fbPower.Enable := FALSE;
+	END_IF
+*)
+	
+
+CASE Step OF
+//-----------------------------------------------------------------------------------------------------------------------
+	MoverSequence.Stopping:	
+	
+		IF fbHaltCA.Done OR AxisReference.Status.StandStill THEN
+			fbHaltCA.Execute 	:= FALSE;
+			toStart				:= FALSE;
+			toNext				:= FALSE;
+			toStop				:= FALSE;
+			Step := MoverSequence.Disabling;
+			END_IF
+			
+//-----------------------------------------------------------------------------------------------------------------------
+	MoverSequence.Disabling:		//RESULT OF PRESSING STOP
+	 // Waiting area 
+	 
+	 IF toDisable THEN
+		Enable						:= FALSE;
+		fbPower.Enable				:= FALSE;
+		fbPower.Enable_Positive		:= FALSE;
+		fbPower.Enable_Negative		:= FALSE;
+		fbPower.BufferMode			:= MC_Aborting;
+		fbPower.Override			:= 100;
+		IF AxisReference.Status.Disabled THEN
+			toDisable := FALSE;
+			Step := MoverSequence.Off;
+		END_IF
+	END_IF
+			
+//-----------------------------------------------------------------------------------------------------------------------
+	MoverSequence.Pausing:	
+	
+	
+		IF fbHaltCA.Done THEN
+			fbHaltCA.Execute 	:= FALSE;
+			toStart				:= FALSE;
+			toNext				:= FALSE;
+			toPause				:= FALSE;
+			Step := MoverSequence.OFF;
+			END_IF
+
+//-----------------------------------------------------------------------------------------------------------------------
+	MoverSequence.Off:
+		// when enable request is true, use MC_Power function block
+		IF Enable THEN
+			fbPower.Enable_Positive := TRUE;
+			fbPower.Enable := TRUE;
+		END_IF
+		IF Enabled THEN
+			Step	:= MoverSequence.Idle;
+		END_IF
+		
+//-----------------------------------------------------------------------------------------------------------------------	
+	MoverSequence.Idle:
+		// ready and awaiting either toStart or toNext
+		IF toStart THEN
+			TargetStation		:= GVL.startStation;
+			Step				:= MoverSequence.MovingToStart;
+		ELSIF toNext THEN
+			Step				:= MoverSequence.MovingToStation;
+		END_IF
+		
+//-----------------------------------------------------------------------------------------------------------------------	
+	MoverSequence.MovingToStart:
+		// move absolute with collision avoidance to start station
+		IF NOT fbMoveAbsCA.Busy AND NOT fbMoveAbsCA.Done THEN
+			fbMoveAbsCA.Execute			:= TRUE;
+			fbMoveAbsCA.Position		:= GVL.Station[GVL.startStation].Position;
+			fbMoveAbsCA.Velocity		:= 1000.0;										// parameterize
+			//fbMoveAbsCA.Acceleration	:= 0.0;											// parameterize
+			//fbMoveAbsCA.Deceleration	:= 0.0;											// parameterize
+			//fbMoveAbsCA.Jerk			:= 0.0;											// parameterize
+			//fbMoveAbsCA.Gap				:= MC_DEFAULT;								// usually default
+			fbMoveAbsCA.Direction		:= MC_Positive_Direction;						// usually positive
+		ELSE
+			fbMoveAbsCA.Execute			:= FALSE;
+		END_IF
+		// check for error
+		IF fbMoveAbsCA.Error THEN
+			Error				:= fbMoveAbsCA.ErrorId;
+			Step				:= MoverSequence.Error;
+			fbMoveAbsCA.Execute	:= FALSE;
+		END_IF
+		// check for move complete
+		IF fbMoveAbsCA.Done THEN
+			fbMoveAbsCA.Execute	:= FALSE;
+			toStart				:= FALSE;
+			Step				:= MoverSequence.AtStart;
+		END_IF
+		
+//-----------------------------------------------------------------------------------------------------------------------	
+	MoverSequence.AtStart:
+		toStart					:= FALSE;
+		// wait for command to next station
+		IF toNext THEN
+			IF TargetStation < GVL.NUM_STATIONS THEN
+				// next station
+				TargetStation	:= TargetStation + 1;
+			ELSE
+				// at last station, next station is 1
+				TargetStation	:= 1;
+			END_IF
+			Step				:= MoverSequence.MovingToStation;
+		END_IF
+//-----------------------------------------------------------------------------------------------------------------------	
+	MoverSequence.MovingToStation:
+		// move absolute with collision avoidance to next station
+		fbMoveAbsCA.Execute			:= TRUE;
+				fbMoveAbsCA.Position		:= GVL.Station[TargetStation].Position;
+				fbMoveAbsCA.Velocity		:= 1000.0;										// parameterize
+				//fbMoveAbsCA.Acceleration	:= 0.0;											// parameterize
+				//fbMoveAbsCA.Deceleration	:= 0.0;											// parameterize
+				//fbMoveAbsCA.Jerk			:= 0.0;											// parameterize
+				//fbMoveAbsCA.Gap				:= MC_DEFAULT;								// usually default
+				fbMoveAbsCA.Direction		:= mcDirectionShortestWay;						// usually positive
+		// check for error
+		IF fbMoveAbsCA.Error THEN
+			Error				:= fbMoveAbsCA.ErrorId;
+			Step				:= MoverSequence.Error;
+			fbMoveAbsCA(Axis	:= AxisReference,
+						Execute	:= FALSE);
+		END_IF
+		// check for move complete
+		IF fbMoveAbsCA.Done THEN
+			fbMoveAbsCA.Execute := FALSE;
+			toNext				:= FALSE;
+			Step				:= MoverSequence.AtStation;
+		END_IF
+//-----------------------------------------------------------------------------------------------------------------------	
+	MoverSequence.AtStation:
+		// wait for command to next station
+		IF toNext THEN
+			IF TargetStation < GVL.NUM_STATIONS THEN
+				// next station
+				TargetStation	:= TargetStation + 1;
+			ELSE
+				// at last station, next station is 1
+				TargetStation	:= 1;
+			END_IF
+			Step				:= MoverSequence.MovingToStation;
+		END_IF
+		
+END_CASE
+
+	fbPower(Axis := AxisReference);
+	fbReset(Axis := AxisReference);
+	fbHaltCA(Axis := AxisReference);
+	fbMoveAbsCA(Axis := AxisReference);
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="Mover">
+      <LineId Id="1" Count="2" />
+      <LineId Id="411" Count="1" />
+      <LineId Id="410" Count="0" />
+      <LineId Id="4" Count="0" />
+      <LineId Id="57" Count="1" />
+      <LineId Id="64" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="389" Count="0" />
+      <LineId Id="164" Count="0" />
+      <LineId Id="139" Count="0" />
+      <LineId Id="213" Count="1" />
+      <LineId Id="211" Count="0" />
+      <LineId Id="299" Count="0" />
+      <LineId Id="314" Count="0" />
+      <LineId Id="301" Count="0" />
+      <LineId Id="315" Count="0" />
+      <LineId Id="304" Count="0" />
+      <LineId Id="190" Count="0" />
+      <LineId Id="372" Count="0" />
+      <LineId Id="374" Count="1" />
+      <LineId Id="380" Count="0" />
+      <LineId Id="400" Count="0" />
+      <LineId Id="382" Count="0" />
+      <LineId Id="387" Count="0" />
+      <LineId Id="401" Count="0" />
+      <LineId Id="379" Count="0" />
+      <LineId Id="376" Count="1" />
+      <LineId Id="188" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="179" Count="0" />
+      <LineId Id="352" Count="0" />
+      <LineId Id="216" Count="0" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="346" Count="1" />
+      <LineId Id="356" Count="0" />
+      <LineId Id="273" Count="0" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="325" Count="0" />
+      <LineId Id="327" Count="10" />
+      <LineId Id="339" Count="3" />
+      <LineId Id="326" Count="0" />
+      <LineId Id="316" Count="0" />
+      <LineId Id="318" Count="1" />
+      <LineId Id="353" Count="1" />
+      <LineId Id="320" Count="0" />
+      <LineId Id="323" Count="0" />
+      <LineId Id="348" Count="1" />
+      <LineId Id="358" Count="0" />
+      <LineId Id="324" Count="0" />
+      <LineId Id="317" Count="0" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="8" Count="3" />
+      <LineId Id="404" Count="0" />
+      <LineId Id="14" Count="3" />
+      <LineId Id="238" Count="0" />
+      <LineId Id="18" Count="3" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="22" Count="3" />
+      <LineId Id="239" Count="0" />
+      <LineId Id="28" Count="2" />
+      <LineId Id="124" Count="0" />
+      <LineId Id="31" Count="1" />
+      <LineId Id="36" Count="5" />
+      <LineId Id="126" Count="1" />
+      <LineId Id="125" Count="0" />
+      <LineId Id="43" Count="1" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="49" Count="2" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="67" Count="3" />
+      <LineId Id="72" Count="1" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="82" Count="2" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="90" Count="16" />
+      <LineId Id="108" Count="1" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="110" Count="1" />
+      <LineId Id="114" Count="9" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="394" Count="3" />
+      <LineId Id="393" Count="0" />
+      <LineId Id="391" Count="1" />
+      <LineId Id="390" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

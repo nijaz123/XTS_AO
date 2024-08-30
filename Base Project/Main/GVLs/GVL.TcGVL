@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.8">
+  <GVL Name="GVL" Id="{73e6a867-4426-4dae-a583-2a717b275c1c}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL CONSTANT
+
+	TRACK_LENGTH 			: LREAL := 7000; // This should be set to the exact length [mm] of the track system
+	NUM_MOVERS   			: USINT := 20;   // This should be set to the exact number of movers on the system
+	
+	// The following should be set to a value **equal to or greater than** the number of objectives needed
+	NUM_POSITIONTRIGGERS	: USINT := 10;	// Position Triggers
+	NUM_STATIONS			: USINT := 10;	// Stations
+	NUM_ZONES				: USINT := 10;	// Zones
+
+	// Station constants
+	startStation		: USINT	:= 1;		// set this number to the index of the station all movers should start from
+	stationTolerance	: LREAL	:= 0.5;		// set to number of millimeters tolerance for mover at station
+	zeroSpeed			: lreal	:= 10.0;		// tolerance for definition of not moving
+
+END_VAR
+VAR_GLOBAL
+	Mover			: ARRAY[1..GVL.NUM_MOVERS] OF Mover;
+	Station			: ARRAY[1..GVL.NUM_STATIONS] OF station;
+	Zone			: ARRAY[1..GVL.NUM_ZONES] OF zone;
+	newCallTime: LREAL;
+	
+	
+	//-------------ADDED BY NIJAZ-------------
+	dsMoverControlFlags		:	MoverControlFlags;
+	bzone0Stop				:	BOOL;
+	
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

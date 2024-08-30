@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.8">
+  <POU Name="Station" Id="{e6e062fa-022a-0d7c-351a-63a5cd525566}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK Station
+VAR_INPUT
+	Position		: LREAL;
+	bMoveToNext		: BOOL;
+END_VAR
+VAR_OUTPUT
+	CurrentMover	: UDINT;
+END_VAR
+VAR
+	Step			: StationSequence;
+	i				: USINT;
+	PosLow			: LREAL;
+	PosHigh			: lreal;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* this function block handles each station *)
+
+PosLow		:= Position - ( GVL.stationTolerance / 2 );
+IF PosLow < 0 THEN
+	PosLow	:= GVL.TRACK_LENGTH + PosLow;
+END_IF
+PosHigh		:= Position + ( GVL.stationTolerance / 2 );
+
+CASE Step OF 
+	StationSequence.Idle:
+		// loop through all movers checking position
+		FOR i := 1 TO GVL.NUM_MOVERS DO
+			IF GVL.Mover[i].Ready
+			AND ( GVL.Mover[i].Step = MoverSequence.AtStart OR GVL.Mover[i].Step = MoverSequence.AtStation )
+			AND ABS(GVL.Mover[i].Velocity) < GVL.zeroSpeed THEN
+				IF PosLow < PosHigh THEN
+					IF GVL.Mover[i].Position > PosLow
+					AND GVL.Mover[i].Position < PosHigh THEN
+						CurrentMover	:= i;
+						Step			:= StationSequence.MoverPresent;
+					END_IF
+				ELSE
+					// station position is close to rollover
+					IF GVL.Mover[i].Position > PosLow
+					OR GVL.Mover[i].Position < PosHigh THEN
+						CurrentMover	:= i;
+						Step			:= StationSequence.MoverPresent;
+					END_IF
+				END_IF
+			END_IF
+		END_FOR
+//-----------------------------------------------------------------------------------------------------------------------	
+	StationSequence.MoverPresent:
+		(* call code to have robot pick and place as needed *)
+		// robot tasks complete, discharge mover
+		
+		IF bMoveToNext THEN									
+			Step	:= StationSequence.DischargeMover;
+			bMoveToNext := FALSE;
+		END_IF
+//-----------------------------------------------------------------------------------------------------------------------		
+	StationSequence.DischargeMover:
+		// request mover move to next station
+		GVL.Mover[CurrentMover].toNext	:= TRUE;
+		// verify mover has left
+		IF GVL.Mover[CurrentMover].Busy
+			AND GVL.Mover[CurrentMover].Position > (Position + GVL.stationTolerance / 2)
+			AND GVL.Mover[CurrentMover].Velocity > GVL.zeroSpeed THEN
+				Step	:= StationSequence.Idle;
+		END_IF
+END_CASE
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="Station">
+      <LineId Id="93" Count="51" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

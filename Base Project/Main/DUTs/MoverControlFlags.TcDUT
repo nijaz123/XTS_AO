@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.8">
+  <DUT Name="MoverControlFlags" Id="{7afb40cd-89c1-0592-025b-48b584096f12}">
+    <Declaration><![CDATA[TYPE MoverControlFlags :
+STRUCT
+
+	loadTray_Busy		: BOOL;			// To the machine to check Sensor
+	loadTray_Complete	: BOOL;			// From Sensor is TRUE
+	loadArea1_Busy		: BOOL;			// TO Robot 1 to start working
+	loadArea1_Complete	: BOOL;			// FROM Robot 1 that placing parts has completed
+	loadArea2_Busy		: BOOL;			// TO Robot 2 to start working
+	loadArea2_Complete	: BOOL;			// FROM Robot 1 that placing parts has completed
+	loadArea3_Busy		: BOOL;			// TO Robot 3 to start working
+	loadArea3_Complete	: BOOL;			// FROM Robot 1 that placing parts has completed
+	loadArea4_Busy		: BOOL;			// TO Robot 4 to start working
+	loadArea4_Complete	: BOOL;			// From Robot 1 that placing parts has completed
+	unloadTray_Busy		: BOOL;			// To Robot 5 to start working
+	unloadTray_Complete	: BOOL;			// From Robot 5. Tray is unloaded
+
+
+
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>
