@@ -35,6 +35,10 @@ FOR i := 1 TO GVL.NUM_MOVERS DO
 	fbRemoveAxisFromGroup[i](AxesGroup		:= stCaGroupRef);
 	fbAddAxis[i](AxesGroup		:= stCaGroupRef,
 				Axis			:= GVL.Mover[i].AxisReference);
+				
+	IF GVL.Mover[i].AxisReference.Status.Moving THEN
+				allMoversHalted		:= FALSE;
+			END_IF
 END_FOR
 FOR i := 1 TO GVL.NUM_STATIONS DO
 	GVL.Station[i]();
@@ -315,6 +319,13 @@ END_IF
 		END_IF
 	END_IF
 	
+	IF HMI.StartOver THEN
+		Started := TRUE;
+		HMI.StartOver := FALSE;
+		Step :=	XTSSequence.Standby;
+		
+	END_IF
+	
 END_CASE
 
 fbEnableGroup(AxesGroup	:= stCaGroupRef);
@@ -372,6 +383,9 @@ bLightCurtainExited(CLK:=HMI.bzone0Stop);
       <LineId Id="545" Count="0" />
       <LineId Id="549" Count="0" />
       <LineId Id="561" Count="1" />
+      <LineId Id="637" Count="0" />
+      <LineId Id="635" Count="1" />
+      <LineId Id="633" Count="0" />
       <LineId Id="120" Count="9" />
       <LineId Id="336" Count="0" />
       <LineId Id="315" Count="0" />
@@ -507,7 +521,13 @@ bLightCurtainExited(CLK:=HMI.bzone0Stop);
       <LineId Id="268" Count="0" />
       <LineId Id="586" Count="0" />
       <LineId Id="575" Count="1" />
-      <LineId Id="270" Count="8" />
+      <LineId Id="270" Count="7" />
+      <LineId Id="638" Count="1" />
+      <LineId Id="643" Count="1" />
+      <LineId Id="640" Count="0" />
+      <LineId Id="642" Count="0" />
+      <LineId Id="641" Count="0" />
+      <LineId Id="278" Count="0" />
       <LineId Id="91" Count="0" />
       <LineId Id="553" Count="1" />
       <LineId Id="628" Count="0" />

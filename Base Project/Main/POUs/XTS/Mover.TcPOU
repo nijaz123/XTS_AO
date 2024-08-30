@@ -42,7 +42,7 @@ END_VAR
 	AxisReference.ReadStatus();
 
 	Enabled		:= NOT AxisReference.Status.Disabled;
-	Ready		:= AxisReference.Status.NotMoving AND NOT AxisReference.Status.Error;
+	Ready		:= AxisReference.Status.NotMoving AND NOT AxisReference.Status.Error AND NOT AxisReference.Status.Disabled;
 	Busy		:= AxisReference.Status.Moving;
 	Position	:= AxisReference.NcToPlc.ModuloActPos;
 	Velocity	:= AxisReference.NcToPlc.ActVelo;
@@ -59,17 +59,6 @@ END_VAR
 			Step := MoverSequence.Pausing;
 		END_IF
 	END_IF
-	
-(*
-	IF bdummy THEN
-		fbPower.Enable_Positive := TRUE;
-		fbPower.Enable := TRUE;
-	ELSE
-		fbPower.Enable_Positive := FALSE;
-		fbPower.Enable := FALSE;
-	END_IF
-*)
-	
 
 CASE Step OF
 //-----------------------------------------------------------------------------------------------------------------------
@@ -185,7 +174,7 @@ CASE Step OF
 				//fbMoveAbsCA.Deceleration	:= 0.0;											// parameterize
 				//fbMoveAbsCA.Jerk			:= 0.0;											// parameterize
 				//fbMoveAbsCA.Gap				:= MC_DEFAULT;								// usually default
-				fbMoveAbsCA.Direction		:= mcDirectionShortestWay;						// usually positive
+				fbMoveAbsCA.Direction		:= MC_Positive_Direction;						// usually positive
 		// check for error
 		IF fbMoveAbsCA.Error THEN
 			Error				:= fbMoveAbsCA.ErrorId;
@@ -211,6 +200,10 @@ CASE Step OF
 				TargetStation	:= 1;
 			END_IF
 			Step				:= MoverSequence.MovingToStation;
+		END_IF
+		
+		IF toStart THEN
+			Step				:= MoverSequence.MovingToStart;
 		END_IF
 		
 END_CASE
@@ -242,15 +235,6 @@ END_CASE
       <LineId Id="315" Count="0" />
       <LineId Id="304" Count="0" />
       <LineId Id="190" Count="0" />
-      <LineId Id="372" Count="0" />
-      <LineId Id="374" Count="1" />
-      <LineId Id="380" Count="0" />
-      <LineId Id="400" Count="0" />
-      <LineId Id="382" Count="0" />
-      <LineId Id="387" Count="0" />
-      <LineId Id="401" Count="0" />
-      <LineId Id="379" Count="0" />
-      <LineId Id="376" Count="1" />
       <LineId Id="188" Count="0" />
       <LineId Id="7" Count="0" />
       <LineId Id="182" Count="0" />
@@ -319,6 +303,7 @@ END_CASE
       <LineId Id="110" Count="1" />
       <LineId Id="114" Count="9" />
       <LineId Id="113" Count="0" />
+      <LineId Id="413" Count="3" />
       <LineId Id="85" Count="0" />
       <LineId Id="26" Count="0" />
       <LineId Id="394" Count="3" />
