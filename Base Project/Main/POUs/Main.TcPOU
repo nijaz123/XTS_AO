@@ -306,16 +306,21 @@ END_IF
 		HMI.dsMoverControlFlags.unloadTray_Busy := TRUE;			//SIGNAL TO ROBOT 5 TO UNLOAD TRAY
 		IF HMI.dsMoverControlFlags.unloadTray_Complete THEN			//SIGNAL FROM ROBOT 5 UNLOAD TRAY COMPLETED
 			HMI.dsMoverControlFlags.unloadTray_Complete := FALSE;
-			GVL.Station[6].bMoveToNext := TRUE;
+			IF HMI.bzone0Stop THEN
+				GVL.Station[6].bMoveToNext := TRUE;					//Send to Queue Movers Station
+			ELSE
+				GVL.Station[6].bMoveToStart := TRUE;					//Send to Load Tray Station
+			END_IF
+
 		END_IF
 	ELSE
-		HMI.dsMoverControlFlags.unloadTray_Busy := TRUE;
+		HMI.dsMoverControlFlags.unloadTray_Busy := FALSE;
 	END_IF
 	
 	// Queue Station used only if Operator is in Zone 1
 	IF GVL.Station[7].Step = StationSequence.MoverPresent THEN
 		IF HMI.bzone0Stop = FALSE THEN			
-			GVL.Station[7].bMoveToNext := TRUE;
+			GVL.Station[7].bMoveToStart := TRUE;
 		END_IF
 	END_IF
 	
@@ -518,6 +523,9 @@ bLightCurtainExited(CLK:=HMI.bzone0Stop);
       <LineId Id="573" Count="1" />
       <LineId Id="261" Count="5" />
       <LineId Id="284" Count="0" />
+      <LineId Id="645" Count="1" />
+      <LineId Id="648" Count="1" />
+      <LineId Id="647" Count="0" />
       <LineId Id="268" Count="0" />
       <LineId Id="586" Count="0" />
       <LineId Id="575" Count="1" />

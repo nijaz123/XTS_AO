@@ -5,6 +5,7 @@
 VAR_INPUT
 	Position		: LREAL;
 	bMoveToNext		: BOOL;
+	bMoveToStart	: BOOL;
 END_VAR
 VAR_OUTPUT
 	CurrentMover	: UDINT;
@@ -56,11 +57,18 @@ CASE Step OF
 		IF bMoveToNext THEN									
 			Step	:= StationSequence.DischargeMover;
 			bMoveToNext := FALSE;
+			GVL.Mover[CurrentMover].toNext	:= TRUE;		// request mover move to next station
+		END_IF
+		
+		IF bMoveToStart THEN
+			Step	:= StationSequence.DischargeMover;
+			bMoveToStart := FALSE;
+			GVL.Mover[CurrentMover].toStart	:= TRUE;		// request mover move to Start station
 		END_IF
 //-----------------------------------------------------------------------------------------------------------------------		
 	StationSequence.DischargeMover:
 		// request mover move to next station
-		GVL.Mover[CurrentMover].toNext	:= TRUE;
+		//GVL.Mover[CurrentMover].toNext	:= TRUE;
 		// verify mover has left
 		IF GVL.Mover[CurrentMover].Busy
 			AND GVL.Mover[CurrentMover].Position > (Position + GVL.stationTolerance / 2)
@@ -72,7 +80,13 @@ END_CASE
 ]]></ST>
     </Implementation>
     <LineIds Name="Station">
-      <LineId Id="93" Count="51" />
+      <LineId Id="93" Count="38" />
+      <LineId Id="151" Count="0" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="145" Count="1" />
+      <LineId Id="152" Count="1" />
+      <LineId Id="147" Count="1" />
+      <LineId Id="133" Count="11" />
       <LineId Id="7" Count="0" />
     </LineIds>
   </POU>

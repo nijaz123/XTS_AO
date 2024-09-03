@@ -9,7 +9,7 @@ VAR_GLOBAL CONSTANT
 	
 	// The following should be set to a value **equal to or greater than** the number of objectives needed
 	NUM_POSITIONTRIGGERS	: USINT := 10;	// Position Triggers
-	NUM_STATIONS			: USINT := 10;	// Stations
+	NUM_STATIONS			: USINT := 8;	// Stations
 	NUM_ZONES				: USINT := 10;	// Zones
 
 	// Station constants
