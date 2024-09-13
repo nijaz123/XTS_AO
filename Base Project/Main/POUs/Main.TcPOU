@@ -62,6 +62,10 @@ CASE Step OF
 	XTSSequence.Off:
 		// state waiting for start command		----	Movers are off
 		
+		
+		
+		//COMMIT TEST
+		
 		Initialize();
 
 			IF HMI.StartOver THEN
@@ -394,9 +398,11 @@ bLightCurtainExited(CLK:=HMI.bzone0Stop);
       <LineId Id="120" Count="9" />
       <LineId Id="336" Count="0" />
       <LineId Id="315" Count="0" />
-      <LineId Id="132" Count="5" />
+      <LineId Id="132" Count="4" />
+      <LineId Id="651" Count="0" />
       <LineId Id="602" Count="0" />
       <LineId Id="604" Count="2" />
+      <LineId Id="654" Count="3" />
       <LineId Id="629" Count="0" />
       <LineId Id="631" Count="0" />
       <LineId Id="607" Count="0" />
