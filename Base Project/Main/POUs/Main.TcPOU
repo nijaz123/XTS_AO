@@ -14,16 +14,14 @@ VAR
 	fbRemoveAxisFromGroup	: ARRAY[1..GVL.NUM_MOVERS] OF MC_RemoveAxisFromGroup;
 	nAtStart: UINT;
 	nToStart: UINT;
-	
-	allMoversHalted: BOOL;
-
-	
-	
+	allMoversHalted: BOOL;	
 	MoversReady: BOOL;
 	Started: BOOL;
 	Resumed: BOOL;
-	bLightCurtainEntered: R_TRIG;
-	bLightCurtainExited: F_TRIG;
+	bLightCurtainEntered	: R_TRIG;
+	bLightCurtainExited		: F_TRIG;
+	safeToOpenDoors			: BOOL;
+	allMoversNotMoving		: BOOL;
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[(* this program handles the main sequencer of this machine *)
@@ -35,10 +33,13 @@ FOR i := 1 TO GVL.NUM_MOVERS DO
 	fbRemoveAxisFromGroup[i](AxesGroup		:= stCaGroupRef);
 	fbAddAxis[i](AxesGroup		:= stCaGroupRef,
 				Axis			:= GVL.Mover[i].AxisReference);
-				
+	//Monitoring if all movers are in stopped motion state			
 	IF GVL.Mover[i].AxisReference.Status.Moving THEN
-				allMoversHalted		:= FALSE;
-			END_IF
+		allMoversNotMoving	:= FALSE;
+	ELSE
+		allMoversNotMoving	:= TRUE;
+	END_IF
+	
 END_FOR
 FOR i := 1 TO GVL.NUM_STATIONS DO
 	GVL.Station[i]();
@@ -62,9 +63,6 @@ CASE Step OF
 	XTSSequence.Off:
 		// state waiting for start command		----	Movers are off
 		
-		
-		
-		//COMMIT TEST
 		
 		Initialize();
 
@@ -95,15 +93,7 @@ CASE Step OF
 	XTSSequence.Pausing:
 	
 	// Waiting for all to come to a full stop
-	allMoversHalted				:= TRUE;
-	
-	FOR i := 1 TO GVL.NUM_MOVERS DO
-		IF GVL.Mover[i].AxisReference.Status.Moving THEN
-			allMoversHalted		:= FALSE;
-		END_IF
-	END_FOR
-	
-	IF allMoversHalted THEN
+	IF allMoversNotMoving THEN
 		Step		:= XTSSequence.Off;
 	END_IF
 
@@ -121,7 +111,8 @@ CASE Step OF
 //-----------------------------------------------------------------------------------------------------------------------	
 	XTSSequence.Stopping:
 		// Waiting for all to come to a full stop
-		allMoversHalted				:= TRUE;
+		
+allMoversHalted				:= TRUE;
 	
 		FOR i := 1 TO GVL.NUM_MOVERS DO
 			IF GVL.Mover[i].AxisReference.Status.Moving THEN
@@ -204,7 +195,6 @@ CASE Step OF
 		FOR i:= 1 TO GVL.NUM_MOVERS DO
 			fbAddAxis[i].IdentInGroup := UDINT_TO_IDENTINGROUP(UINT_TO_UDINT(i));
 			fbAddAxis[i].Execute := FALSE;
-			MoversReady := TRUE;
 			Step	:= XTSSequence.StandBy;
 		END_FOR
 	END_IF
@@ -339,6 +329,13 @@ END_CASE
 
 fbEnableGroup(AxesGroup	:= stCaGroupRef);
 LightCurtainCheck();
+ShuttleMoverToQueue();
+
+IF allMoversNotMoving THEN
+	HMI.SafeToUnlock := TRUE;
+ELSE
+	HMI.SafeToUnlock := FALSE;
+END_IF
 ]]></ST>
     </Implementation>
     <Method Name="Initialize" Id="{4ea4d127-ec11-0953-31c9-c3462af2cac5}">
@@ -355,7 +352,6 @@ END_VAR
 	GVL.Station[5].Position		:= 3000.0;
 	GVL.Station[6].Position		:= 3600.0;
 	GVL.Station[7].Position		:= 4250.0;
-	GVL.Station[8].Position		:= 4490.0;
 	]]></ST>
       </Implementation>
     </Method>
@@ -386,172 +382,36 @@ bLightCurtainExited(CLK:=HMI.bzone0Stop);
 	]]></ST>
       </Implementation>
     </Action>
+    <Action Name="ShuttleMoverToQueue" Id="{1ea195c0-e199-0839-0126-992a39ca089e}">
+      <Implementation>
+        <ST><![CDATA[
+// This will be used for set up if mover is needed to be re-circulated around track
+
+IF 	GVL.Station[1].Step = StationSequence.MoverPresent AND 
+	GVL.Station[2].Step = StationSequence.Idle AND 
+	GVL.Station[3].Step = StationSequence.Idle AND 
+	GVL.Station[4].Step = StationSequence.Idle AND 
+	GVL.Station[5].Step = StationSequence.Idle AND 
+	GVL.Station[6].Step = StationSequence.Idle AND 
+	GVL.Station[7].Step = StationSequence.Idle AND 
+	HMI.ShuttleMover THEN
+		GVL.Station[1].bMoveToQueue := TRUE;
+		HMI.ShuttleMover := FALSE;
+END_IF]]></ST>
+      </Implementation>
+    </Action>
     <LineIds Name="Main">
-      <LineId Id="110" Count="0" />
-      <LineId Id="116" Count="3" />
-      <LineId Id="545" Count="0" />
-      <LineId Id="549" Count="0" />
-      <LineId Id="561" Count="1" />
-      <LineId Id="637" Count="0" />
-      <LineId Id="635" Count="1" />
-      <LineId Id="633" Count="0" />
-      <LineId Id="120" Count="9" />
-      <LineId Id="336" Count="0" />
-      <LineId Id="315" Count="0" />
-      <LineId Id="132" Count="4" />
-      <LineId Id="651" Count="0" />
-      <LineId Id="602" Count="0" />
-      <LineId Id="604" Count="2" />
-      <LineId Id="654" Count="3" />
-      <LineId Id="629" Count="0" />
-      <LineId Id="631" Count="0" />
-      <LineId Id="607" Count="0" />
-      <LineId Id="609" Count="0" />
-      <LineId Id="616" Count="0" />
-      <LineId Id="610" Count="0" />
-      <LineId Id="619" Count="0" />
-      <LineId Id="611" Count="0" />
-      <LineId Id="618" Count="0" />
-      <LineId Id="614" Count="0" />
-      <LineId Id="617" Count="0" />
-      <LineId Id="615" Count="0" />
-      <LineId Id="620" Count="0" />
-      <LineId Id="613" Count="0" />
-      <LineId Id="467" Count="1" />
-      <LineId Id="466" Count="0" />
-      <LineId Id="474" Count="0" />
-      <LineId Id="476" Count="2" />
-      <LineId Id="622" Count="1" />
-      <LineId Id="479" Count="0" />
-      <LineId Id="475" Count="0" />
-      <LineId Id="480" Count="1" />
-      <LineId Id="484" Count="0" />
-      <LineId Id="482" Count="0" />
-      <LineId Id="489" Count="3" />
-      <LineId Id="494" Count="6" />
-      <LineId Id="488" Count="0" />
-      <LineId Id="483" Count="0" />
-      <LineId Id="320" Count="2" />
-      <LineId Id="338" Count="2" />
-      <LineId Id="326" Count="0" />
-      <LineId Id="624" Count="1" />
-      <LineId Id="319" Count="0" />
-      <LineId Id="351" Count="0" />
-      <LineId Id="401" Count="0" />
-      <LineId Id="400" Count="0" />
-      <LineId Id="452" Count="1" />
-      <LineId Id="465" Count="0" />
-      <LineId Id="454" Count="0" />
-      <LineId Id="456" Count="2" />
-      <LineId Id="403" Count="1" />
-      <LineId Id="416" Count="1" />
-      <LineId Id="413" Count="0" />
-      <LineId Id="405" Count="0" />
-      <LineId Id="353" Count="0" />
-      <LineId Id="352" Count="0" />
-      <LineId Id="420" Count="2" />
-      <LineId Id="434" Count="0" />
-      <LineId Id="426" Count="0" />
-      <LineId Id="419" Count="0" />
-      <LineId Id="361" Count="0" />
-      <LineId Id="437" Count="0" />
-      <LineId Id="535" Count="0" />
-      <LineId Id="537" Count="1" />
-      <LineId Id="589" Count="0" />
-      <LineId Id="534" Count="0" />
-      <LineId Id="439" Count="1" />
-      <LineId Id="447" Count="1" />
-      <LineId Id="443" Count="0" />
-      <LineId Id="461" Count="1" />
-      <LineId Id="459" Count="0" />
-      <LineId Id="464" Count="0" />
-      <LineId Id="460" Count="0" />
-      <LineId Id="564" Count="0" />
-      <LineId Id="145" Count="19" />
-      <LineId Id="546" Count="0" />
-      <LineId Id="165" Count="2" />
-      <LineId Id="169" Count="5" />
-      <LineId Id="547" Count="0" />
-      <LineId Id="175" Count="4" />
-      <LineId Id="182" Count="2" />
-      <LineId Id="350" Count="0" />
-      <LineId Id="185" Count="1" />
-      <LineId Id="540" Count="0" />
-      <LineId Id="544" Count="0" />
-      <LineId Id="563" Count="0" />
-      <LineId Id="588" Count="0" />
-      <LineId Id="600" Count="0" />
-      <LineId Id="539" Count="0" />
-      <LineId Id="194" Count="0" />
-      <LineId Id="590" Count="0" />
-      <LineId Id="592" Count="0" />
-      <LineId Id="591" Count="0" />
-      <LineId Id="593" Count="1" />
-      <LineId Id="626" Count="0" />
-      <LineId Id="595" Count="2" />
-      <LineId Id="627" Count="0" />
-      <LineId Id="598" Count="1" />
-      <LineId Id="548" Count="0" />
-      <LineId Id="195" Count="2" />
-      <LineId Id="632" Count="0" />
-      <LineId Id="198" Count="15" />
-      <LineId Id="290" Count="0" />
-      <LineId Id="214" Count="1" />
-      <LineId Id="341" Count="0" />
-      <LineId Id="343" Count="1" />
-      <LineId Id="342" Count="0" />
-      <LineId Id="216" Count="0" />
-      <LineId Id="345" Count="0" />
-      <LineId Id="217" Count="3" />
-      <LineId Id="580" Count="0" />
-      <LineId Id="223" Count="0" />
-      <LineId Id="581" Count="0" />
-      <LineId Id="565" Count="1" />
-      <LineId Id="225" Count="5" />
-      <LineId Id="279" Count="0" />
-      <LineId Id="232" Count="0" />
-      <LineId Id="582" Count="0" />
-      <LineId Id="567" Count="1" />
-      <LineId Id="234" Count="5" />
-      <LineId Id="280" Count="0" />
-      <LineId Id="241" Count="0" />
-      <LineId Id="583" Count="0" />
-      <LineId Id="569" Count="1" />
-      <LineId Id="243" Count="5" />
-      <LineId Id="281" Count="0" />
-      <LineId Id="250" Count="0" />
-      <LineId Id="584" Count="0" />
-      <LineId Id="571" Count="1" />
-      <LineId Id="252" Count="5" />
-      <LineId Id="282" Count="0" />
-      <LineId Id="259" Count="0" />
-      <LineId Id="585" Count="0" />
-      <LineId Id="573" Count="1" />
-      <LineId Id="261" Count="5" />
-      <LineId Id="284" Count="0" />
-      <LineId Id="645" Count="1" />
-      <LineId Id="648" Count="1" />
-      <LineId Id="647" Count="0" />
-      <LineId Id="268" Count="0" />
-      <LineId Id="586" Count="0" />
-      <LineId Id="575" Count="1" />
-      <LineId Id="270" Count="7" />
-      <LineId Id="638" Count="1" />
-      <LineId Id="643" Count="1" />
-      <LineId Id="640" Count="0" />
-      <LineId Id="642" Count="0" />
-      <LineId Id="641" Count="0" />
-      <LineId Id="278" Count="0" />
-      <LineId Id="91" Count="0" />
-      <LineId Id="553" Count="1" />
-      <LineId Id="628" Count="0" />
-      <LineId Id="550" Count="0" />
+      <LineId Id="1" Count="312" />
     </LineIds>
     <LineIds Name="Main.Initialize">
-      <LineId Id="31" Count="9" />
+      <LineId Id="31" Count="7" />
+      <LineId Id="40" Count="0" />
     </LineIds>
     <LineIds Name="Main.LightCurtainCheck">
       <LineId Id="1" Count="22" />
+    </LineIds>
+    <LineIds Name="Main.ShuttleMoverToQueue">
+      <LineId Id="1" Count="13" />
     </LineIds>
   </POU>
 </TcPlcObject>

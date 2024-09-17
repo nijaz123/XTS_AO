@@ -3,12 +3,14 @@
   <GVL Name="HMI" Id="{74764eea-f9f1-0a62-209b-313e6c5f9e7d}">
     <Declaration><![CDATA[{attribute 'qualified_only'}
 VAR_GLOBAL
-	StartOver	: BOOL;
-	Stop		: BOOL;
-	Pause		: BOOL;
-	Resume		: BOOL;
-	bzone0Stop	: BOOL;
+	StartOver				: BOOL;
+	Stop					: BOOL;
+	Pause					: BOOL;
+	Resume					: BOOL;
+	bzone0Stop				: BOOL;
+	SafeToUnlock			: BOOL;
 	dsMoverControlFlags		:	MoverControlFlags;
+	ShuttleMover			: BOOL;
 END_VAR]]></Declaration>
   </GVL>
 </TcPlcObject>

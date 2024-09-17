@@ -11,6 +11,8 @@ TYPE MoverSequence :
 	AtStart,
 	MovingToStation,
 	AtStation,
+	MovingToQueue,
+	AtQueue,
 	Error,
 	Stop,
 	Stopping,

@@ -9,6 +9,7 @@ VAR_INPUT
 	toStop			: BOOL;				// Request mover to stop - meaning the movers will be stop, removed from group, and power will be shutdown to the track via an E-Stop or HMI.Stop		
 	toDisable		: BOOL;				// Request mover to disable power	
 	toPause			: BOOL;				// Request movers to pause in place
+	toQueue			: BOOL;				// Request current mover at starting station to join the back of the queue
 END_VAR
 VAR_OUTPUT
 	Enabled			: BOOL;				// Mover confirmed enabled
@@ -30,7 +31,6 @@ VAR
 	
 	//Temporary for Testing
 	iInteger	: INT;
-	
 	bdummy: BOOL;
 END_VAR
 ]]></Declaration>
@@ -48,6 +48,11 @@ END_VAR
 	Velocity	:= AxisReference.NcToPlc.ActVelo;
 	Error		:= AxisReference.NcToPlc.ErrorCode;
 	
+	IF Step = MoverSequence.AtStart AND toQueue THEN
+		Step := MoverSequence.MovingToQueue;
+		toQueue := FALSE;
+	END_IF
+	
 
 	IF toStop OR toPause THEN
 		fbMoveAbsCA.Execute		:= FALSE;
@@ -61,6 +66,39 @@ END_VAR
 	END_IF
 
 CASE Step OF
+	//-----------------------------------------------------------------------------------------------------------------------
+	MoverSequence.MovingToQueue:	
+	
+	IF NOT fbMoveAbsCA.Busy AND NOT fbMoveAbsCA.Done THEN			//Add additional condition that the doors are not unlcoked
+			fbMoveAbsCA.Execute			:= TRUE;
+			fbMoveAbsCA.Position		:= GVL.Station[GVL.startStation].Position+100;
+			fbMoveAbsCA.Velocity		:= 1000.0;										// parameterize
+			fbMoveAbsCA.Direction		:= MC_Positive_Direction;						// usually positive
+		ELSE
+			fbMoveAbsCA.Execute			:= FALSE;
+		END_IF
+		// check for error
+		IF fbMoveAbsCA.Error THEN
+			Error				:= fbMoveAbsCA.ErrorId;
+			Step				:= MoverSequence.Error;
+			fbMoveAbsCA.Execute	:= FALSE;
+		END_IF
+		// check for move complete THEN proceed to starting station
+		IF fbMoveAbsCA.Done THEN
+			fbMoveAbsCA.Execute			:= TRUE;
+			fbMoveAbsCA.Position		:= GVL.Station[GVL.startStation].Position;
+			fbMoveAbsCA.Velocity		:= 1000.0;
+			Step				:= MoverSequence.MovingToStart;
+		END_IF
+		
+	//-----------------------------------------------------------------------------------------------------------------------
+	MoverSequence.AtQueue:	
+	
+	IF fbMoveAbsCA.Done THEN
+		fbMoveAbsCA.Execute			:= FALSE;
+	END_IF
+	
+	
 //-----------------------------------------------------------------------------------------------------------------------
 	MoverSequence.Stopping:	
 	
@@ -125,14 +163,10 @@ CASE Step OF
 //-----------------------------------------------------------------------------------------------------------------------	
 	MoverSequence.MovingToStart:
 		// move absolute with collision avoidance to start station
-		IF NOT fbMoveAbsCA.Busy AND NOT fbMoveAbsCA.Done THEN
+		IF NOT fbMoveAbsCA.Busy AND NOT fbMoveAbsCA.Done THEN			//Add additional condition that the doors are not unlcoked
 			fbMoveAbsCA.Execute			:= TRUE;
 			fbMoveAbsCA.Position		:= GVL.Station[GVL.startStation].Position;
 			fbMoveAbsCA.Velocity		:= 1000.0;										// parameterize
-			//fbMoveAbsCA.Acceleration	:= 0.0;											// parameterize
-			//fbMoveAbsCA.Deceleration	:= 0.0;											// parameterize
-			//fbMoveAbsCA.Jerk			:= 0.0;											// parameterize
-			//fbMoveAbsCA.Gap				:= MC_DEFAULT;								// usually default
 			fbMoveAbsCA.Direction		:= MC_Positive_Direction;						// usually positive
 		ELSE
 			fbMoveAbsCA.Execute			:= FALSE;
@@ -152,7 +186,7 @@ CASE Step OF
 		
 //-----------------------------------------------------------------------------------------------------------------------	
 	MoverSequence.AtStart:
-		toStart					:= FALSE;
+		toStart					:= FALSE;							//Add additional condition that the doors are not unlcoked
 		// wait for command to next station
 		IF toNext THEN
 			IF TargetStation < GVL.NUM_STATIONS THEN
@@ -166,14 +200,10 @@ CASE Step OF
 		END_IF
 //-----------------------------------------------------------------------------------------------------------------------	
 	MoverSequence.MovingToStation:
-		// move absolute with collision avoidance to next station
+		// move absolute with collision avoidance to next station		//Add additional condition that the doors are not unlcoked
 		fbMoveAbsCA.Execute			:= TRUE;
 				fbMoveAbsCA.Position		:= GVL.Station[TargetStation].Position;
 				fbMoveAbsCA.Velocity		:= 1000.0;										// parameterize
-				//fbMoveAbsCA.Acceleration	:= 0.0;											// parameterize
-				//fbMoveAbsCA.Deceleration	:= 0.0;											// parameterize
-				//fbMoveAbsCA.Jerk			:= 0.0;											// parameterize
-				//fbMoveAbsCA.Gap				:= MC_DEFAULT;								// usually default
 				fbMoveAbsCA.Direction		:= MC_Positive_Direction;						// usually positive
 		// check for error
 		IF fbMoveAbsCA.Error THEN
@@ -191,7 +221,7 @@ CASE Step OF
 //-----------------------------------------------------------------------------------------------------------------------	
 	MoverSequence.AtStation:
 		// wait for command to next station
-		IF toNext THEN
+		IF toNext THEN															//Add additional condition that the doors are not unlcoked
 			IF TargetStation < GVL.NUM_STATIONS THEN
 				// next station
 				TargetStation	:= TargetStation + 1;
@@ -225,6 +255,11 @@ END_CASE
       <LineId Id="64" Count="1" />
       <LineId Id="5" Count="0" />
       <LineId Id="389" Count="0" />
+      <LineId Id="417" Count="0" />
+      <LineId Id="419" Count="0" />
+      <LineId Id="421" Count="0" />
+      <LineId Id="420" Count="0" />
+      <LineId Id="418" Count="0" />
       <LineId Id="164" Count="0" />
       <LineId Id="139" Count="0" />
       <LineId Id="213" Count="1" />
@@ -237,6 +272,19 @@ END_CASE
       <LineId Id="190" Count="0" />
       <LineId Id="188" Count="0" />
       <LineId Id="7" Count="0" />
+      <LineId Id="422" Count="1" />
+      <LineId Id="429" Count="0" />
+      <LineId Id="431" Count="3" />
+      <LineId Id="439" Count="11" />
+      <LineId Id="455" Count="1" />
+      <LineId Id="454" Count="0" />
+      <LineId Id="453" Count="0" />
+      <LineId Id="430" Count="0" />
+      <LineId Id="457" Count="3" />
+      <LineId Id="424" Count="0" />
+      <LineId Id="461" Count="1" />
+      <LineId Id="425" Count="0" />
+      <LineId Id="428" Count="0" />
       <LineId Id="182" Count="0" />
       <LineId Id="179" Count="0" />
       <LineId Id="352" Count="0" />
@@ -272,7 +320,8 @@ END_CASE
       <LineId Id="28" Count="2" />
       <LineId Id="124" Count="0" />
       <LineId Id="31" Count="1" />
-      <LineId Id="36" Count="5" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="41" Count="0" />
       <LineId Id="126" Count="1" />
       <LineId Id="125" Count="0" />
       <LineId Id="43" Count="1" />
@@ -297,7 +346,8 @@ END_CASE
       <LineId Id="74" Count="0" />
       <LineId Id="82" Count="2" />
       <LineId Id="86" Count="0" />
-      <LineId Id="90" Count="16" />
+      <LineId Id="90" Count="1" />
+      <LineId Id="96" Count="10" />
       <LineId Id="108" Count="1" />
       <LineId Id="88" Count="0" />
       <LineId Id="110" Count="1" />

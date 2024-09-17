@@ -1305,7 +1305,7 @@ External Setpoint Generation:
 		</DataType>
 	</DataTypes>
 	<Project GUID="{DD3A0B29-8E7C-4E32-989D-B0222C998777}" Name="Main" PrjFilePath="..\..\Main\Main.plcproj" TmcFilePath="..\..\Main\Main.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-		<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcHash="{EECE9536-064D-3B94-FC31-F58B1ABC2E6E}" TmcPath="Main\Main.tmc">
+		<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcHash="{1FE880F0-3091-42EB-A8FE-50A8FFA7EDF4}" TmcPath="Main\Main.tmc">
 			<Name>Main Instance</Name>
 			<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 			<Vars VarGrpType="2" AreaNo="1">
@@ -1656,10 +1656,6 @@ External Setpoint Generation:
 	</Project>
 	<Mappings>
 		<OwnerA Name="Main Instance">
-			<OwnerB Name="TIID^Device 15 (EtherCAT)^Term 63 (EK1100)^Term 72 (EL2911)">
-				<Link VarA="PlcTask Outputs^SAFETY.err_ack" VarB="StandardOutputs^Standard In Var 1" Size="1"/>
-				<Link VarA="PlcTask Outputs^SAFETY.run" VarB="StandardOutputs^Standard In Var 2" Size="1"/>
-			</OwnerB>
 			<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 1">
 				<Link VarA="PlcTask Inputs^GVL.Mover[1].AxisReference.NcToPlc" VarB="Outputs^ToPlc"/>
 				<Link VarA="PlcTask Outputs^GVL.Mover[1].AxisReference.PlcToNc" VarB="Inputs^FromPlc"/>

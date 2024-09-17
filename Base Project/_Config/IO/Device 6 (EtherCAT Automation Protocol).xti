@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<TcSmItem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4026.9" ClassName="CDevEthernetProtocolNvDef" SubType="112">
+	<Device Id="6" DevType="112" AmsPort="28678" AmsNetId="192.168.0.20.7.1">
+		<Name>__FILENAME__</Name>
+		<AddressInfo>
+			<Pnp>
+				<DeviceDesc>X105 (TwinCAT-Intel PCI Ethernet Adapter (Gigabit) </DeviceDesc>
+				<DeviceName>\DEVICE\{6FFDC711-9982-4793-9B14-3CB5E4655421}</DeviceName>
+				<DeviceData>00010593f550</DeviceData>
+			</Pnp>
+		</AddressInfo>
+		<Image Id="3" AddrType="1" ImageType="1">
+			<Name>Image</Name>
+		</Image>
+		<Ethernet DeviceDesc="X105 (TwinCAT-Intel PCI Ethernet Adapter (Gigabit) "/>
+		<Eap EapDeviceGuid="{4C16EB9F-A4B3-429F-AE4E-6F38EA790E5F}"/>
+	</Device>
+</TcSmItem>
