@@ -9,7 +9,7 @@ VAR_GLOBAL
 	Resume					: BOOL;
 	bzone0Stop				: BOOL;
 	SafeToUnlock			: BOOL;
-	dsMoverControlFlags		:	MoverControlFlags;
+	dsMoverControlFlags		: MoverControlFlags;
 	ShuttleMover			: BOOL;
 END_VAR]]></Declaration>
   </GVL>

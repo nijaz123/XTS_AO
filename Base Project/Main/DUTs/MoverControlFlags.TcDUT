@@ -6,6 +6,8 @@ STRUCT
 
 	loadTray_Busy		: BOOL;			// To the machine to check Sensor
 	loadTray_Complete	: BOOL;			// From Sensor is TRUE
+	inspectTray_Busy	: BOOL;			// Read the state of the sensor TRUE/FALSE
+	inspectTray_Complate: BOOL;			// From Camera that tray is done being measured
 	loadArea1_Busy		: BOOL;			// TO Robot 1 to start working
 	loadArea1_Complete	: BOOL;			// FROM Robot 1 that placing parts has completed
 	loadArea2_Busy		: BOOL;			// TO Robot 2 to start working

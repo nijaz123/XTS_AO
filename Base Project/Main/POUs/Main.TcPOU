@@ -251,59 +251,70 @@ END_IF
 		HMI.dsMoverControlFlags.loadTray_Busy := FALSE;
 	END_IF
 	
-	// LOAD PARTS STATION 1
+	// INSPECT TRAY STATION
 	IF GVL.Station[2].Step = StationSequence.MoverPresent THEN
+		HMI.dsMoverControlFlags.inspectTray_Busy := TRUE;
+		IF HMI.dsMoverControlFlags.inspectTray_Complate THEN			//IF SENSOR IS TRUE PACKAGE IS PRESENT MOVER GOES TO NEXT STATION
+			HMI.dsMoverControlFlags.inspectTray_Complate := FALSE;
+			GVL.Station[2].bMoveToNext := TRUE;
+		END_IF
+	ELSE
+		HMI.dsMoverControlFlags.inspectTray_Busy := FALSE;
+	END_IF
+	
+	// LOAD PARTS STATION 1
+	IF GVL.Station[3].Step = StationSequence.MoverPresent THEN
 		HMI.dsMoverControlFlags.loadArea1_Busy := TRUE;				//SIGNAL TO ROBOT 1 TO LOAD PARTS
 		IF HMI.dsMoverControlFlags.loadArea1_Complete THEN			//SIGNAL FROM ROBOT 1 PARTS COMPLETED
 			HMI.dsMoverControlFlags.loadArea1_Complete := FALSE;
-			GVL.Station[2].bMoveToNext := TRUE;
+			GVL.Station[3].bMoveToNext := TRUE;
 		END_IF
 	ELSE 
 		HMI.dsMoverControlFlags.loadArea1_Busy := FALSE;
 	END_IF
 	
 	// LOAD PARTS STATION 2
-	IF GVL.Station[3].Step = StationSequence.MoverPresent THEN
+	IF GVL.Station[4].Step = StationSequence.MoverPresent THEN
 		HMI.dsMoverControlFlags.loadArea2_Busy := TRUE;				//SIGNAL TO ROBOT 2 TO LOAD PARTS
 		IF HMI.dsMoverControlFlags.loadArea2_Complete THEN			//SIGNAL FROM ROBOT 2 PARTS COMPLETED
 			HMI.dsMoverControlFlags.loadArea2_Complete := FALSE;
-			GVL.Station[3].bMoveToNext := TRUE;
+			GVL.Station[4].bMoveToNext := TRUE;
 		END_IF
 	ELSE
 		HMI.dsMoverControlFlags.loadArea2_Busy := FALSE;	
 	END_IF
 	
 	// LOAD PARTS STATION 3
-	IF GVL.Station[4].Step = StationSequence.MoverPresent THEN
+	IF GVL.Station[5].Step = StationSequence.MoverPresent THEN
 		HMI.dsMoverControlFlags.loadArea3_Busy := TRUE;				//SIGNAL TO ROBOT 3 TO LOAD PARTS
 		IF HMI.dsMoverControlFlags.loadArea3_Complete THEN			//SIGNAL FROM ROBOT 3 PARTS COMPLETED
 			HMI.dsMoverControlFlags.loadArea3_Complete := FALSE;
-			GVL.Station[4].bMoveToNext := TRUE;
+			GVL.Station[5].bMoveToNext := TRUE;
 		END_IF
 	ELSE
 		HMI.dsMoverControlFlags.loadArea3_Busy := FALSE;
 	END_IF
 
 	// LOAD PARTS STATION 4
-	IF GVL.Station[5].Step = StationSequence.MoverPresent THEN
+	IF GVL.Station[6].Step = StationSequence.MoverPresent THEN
 		HMI.dsMoverControlFlags.loadArea4_Busy := TRUE;				//SIGNAL TO ROBOT 4 TO LOAD PARTS
 		IF HMI.dsMoverControlFlags.loadArea4_Complete THEN			//SIGNAL FROM ROBOT 4 PARTS COMPLETED
 			HMI.dsMoverControlFlags.loadArea4_Complete := FALSE;
-			GVL.Station[5].bMoveToNext := TRUE;
+			GVL.Station[6].bMoveToNext := TRUE;
 		END_IF
 	ELSE
 		HMI.dsMoverControlFlags.loadArea4_Busy := FALSE;	
 	END_IF
 	
 	// UNLOAD PARTS STATION 
-	IF GVL.Station[6].Step = StationSequence.MoverPresent THEN
+	IF GVL.Station[7].Step = StationSequence.MoverPresent THEN
 		HMI.dsMoverControlFlags.unloadTray_Busy := TRUE;			//SIGNAL TO ROBOT 5 TO UNLOAD TRAY
 		IF HMI.dsMoverControlFlags.unloadTray_Complete THEN			//SIGNAL FROM ROBOT 5 UNLOAD TRAY COMPLETED
 			HMI.dsMoverControlFlags.unloadTray_Complete := FALSE;
 			IF HMI.bzone0Stop THEN
-				GVL.Station[6].bMoveToNext := TRUE;					//Send to Queue Movers Station
+				GVL.Station[7].bMoveToNext := TRUE;					//Send to Queue Movers Station
 			ELSE
-				GVL.Station[6].bMoveToStart := TRUE;					//Send to Load Tray Station
+				GVL.Station[8].bMoveToStart := TRUE;					//Send to Load Tray Station
 			END_IF
 
 		END_IF
@@ -312,17 +323,22 @@ END_IF
 	END_IF
 	
 	// Queue Station used only if Operator is in Zone 1
-	IF GVL.Station[7].Step = StationSequence.MoverPresent THEN
+	IF GVL.Station[8].Step = StationSequence.MoverPresent THEN
 		IF HMI.bzone0Stop = FALSE THEN			
-			GVL.Station[7].bMoveToStart := TRUE;
+			GVL.Station[8].bMoveToStart := TRUE;
 		END_IF
 	END_IF
 	
-	IF HMI.StartOver THEN
-		Started := TRUE;
-		HMI.StartOver := FALSE;
-		Step :=	XTSSequence.Standby;
-		
+	// Starting over on the condition that movers are stationary and HMI.Startover has been pressed.
+	IF allMoversNotMoving THEN				
+		IF HMI.StartOver THEN
+			FOR i := 2 TO GVL.NUM_STATIONS DO
+				IF GVL.Station[i].Step = StationSequence.MoverPresent THEN
+				GVL.Station[i].bMoveToStart := TRUE;
+				END_IF
+			END_FOR	
+			HMI.StartOver := FALSE;
+		END_IF
 	END_IF
 	
 END_CASE
@@ -345,13 +361,14 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[// set values of function blocks
-	GVL.Station[1].Position		:= 0.0;
-	GVL.Station[2].Position		:= 750.0;
-	GVL.Station[3].Position		:= 1500.0;
-	GVL.Station[4].Position		:= 2250.0;
-	GVL.Station[5].Position		:= 3000.0;
-	GVL.Station[6].Position		:= 3600.0;
-	GVL.Station[7].Position		:= 4250.0;
+	GVL.Station[1].Position		:= 0.0;				//	Load Tray
+	GVL.Station[2].Position		:= 750.0;			//	Inspect Tray
+	GVL.Station[3].Position		:= 1500.0;			//	Load Parts 1
+	GVL.Station[4].Position		:= 2250.0;			//	Load Parts 2
+	GVL.Station[5].Position		:= 3000.0;			//	Load Parts 3
+	GVL.Station[6].Position		:= 3600.0;			//	Load Parts 4
+	GVL.Station[7].Position		:= 4250.0;			//	Unload Tray
+	GVL.Station[8].Position		:= 4449.0;			//	Queue Area if operator is in workspace
 	]]></ST>
       </Implementation>
     </Method>
@@ -397,21 +414,47 @@ IF 	GVL.Station[1].Step = StationSequence.MoverPresent AND
 	HMI.ShuttleMover THEN
 		GVL.Station[1].bMoveToQueue := TRUE;
 		HMI.ShuttleMover := FALSE;
+		
+	(*FOR i:= 1 TO GVL.NUM_STATIONS DO
+		GVL.Station[i].
+	END_FOR
+	*)
 END_IF]]></ST>
       </Implementation>
     </Action>
     <LineIds Name="Main">
-      <LineId Id="1" Count="312" />
+      <LineId Id="1" Count="225" />
+      <LineId Id="318" Count="0" />
+      <LineId Id="320" Count="8" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="227" Count="67" />
+      <LineId Id="333" Count="0" />
+      <LineId Id="329" Count="0" />
+      <LineId Id="295" Count="0" />
+      <LineId Id="315" Count="0" />
+      <LineId Id="331" Count="0" />
+      <LineId Id="316" Count="0" />
+      <LineId Id="332" Count="0" />
+      <LineId Id="298" Count="0" />
+      <LineId Id="317" Count="0" />
+      <LineId Id="300" Count="0" />
+      <LineId Id="330" Count="0" />
+      <LineId Id="301" Count="12" />
     </LineIds>
     <LineIds Name="Main.Initialize">
       <LineId Id="31" Count="7" />
+      <LineId Id="41" Count="0" />
       <LineId Id="40" Count="0" />
     </LineIds>
     <LineIds Name="Main.LightCurtainCheck">
       <LineId Id="1" Count="22" />
     </LineIds>
     <LineIds Name="Main.ShuttleMoverToQueue">
-      <LineId Id="1" Count="13" />
+      <LineId Id="1" Count="12" />
+      <LineId Id="15" Count="1" />
+      <LineId Id="18" Count="1" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="14" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

@@ -82,12 +82,33 @@ CASE Step OF
 			AND GVL.Mover[CurrentMover].Velocity > GVL.zeroSpeed THEN
 				Step	:= StationSequence.Idle;
 		END_IF
+		
+		(*///--------------------------------------------------------------------
+		IF PosLow < PosHigh THEN
+					IF GVL.Mover[i].Position > PosLow
+					AND GVL.Mover[i].Position < PosHigh THEN
+						CurrentMover	:= i;
+					ELSE
+						Step			:= StationSequence.Idle;
+					END_IF
+				ELSE
+					// station position is close to rollover
+					IF GVL.Mover[i].Position > PosLow
+					OR GVL.Mover[i].Position < PosHigh THEN
+						CurrentMover	:= i;
+					ELSE
+						Step			:= StationSequence.Idle;
+					END_IF
+				END_IF
+		///--------------------------------------------------------------------*)
 END_CASE
 
 ]]></ST>
     </Implementation>
     <LineIds Name="Station">
-      <LineId Id="93" Count="38" />
+      <LineId Id="93" Count="8" />
+      <LineId Id="180" Count="20" />
+      <LineId Id="123" Count="8" />
       <LineId Id="151" Count="0" />
       <LineId Id="132" Count="0" />
       <LineId Id="145" Count="1" />
@@ -98,7 +119,16 @@ END_CASE
       <LineId Id="157" Count="0" />
       <LineId Id="161" Count="0" />
       <LineId Id="158" Count="0" />
-      <LineId Id="133" Count="11" />
+      <LineId Id="133" Count="9" />
+      <LineId Id="176" Count="1" />
+      <LineId Id="201" Count="3" />
+      <LineId Id="216" Count="1" />
+      <LineId Id="206" Count="5" />
+      <LineId Id="214" Count="1" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="162" Count="0" />
+      <LineId Id="178" Count="0" />
+      <LineId Id="143" Count="1" />
       <LineId Id="7" Count="0" />
     </LineIds>
   </POU>
