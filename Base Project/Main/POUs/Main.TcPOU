@@ -12,12 +12,12 @@ VAR
 	fbEnableGroup			: MC_GroupEnable;
 	fbAddAxis				: ARRAY[1..GVL.NUM_MOVERS] OF MC_AddAxisToGroup;
 	fbRemoveAxisFromGroup	: ARRAY[1..GVL.NUM_MOVERS] OF MC_RemoveAxisFromGroup;
-	nAtStart: UINT;
-	nToStart: UINT;
-	allMoversHalted: BOOL;	
-	MoversReady: BOOL;
-	Started: BOOL;
-	Resumed: BOOL;
+	nAtStart				: UINT;
+	nToStart				: UINT;
+	allMoversHalted			: BOOL;	
+	MoversReady				: BOOL;
+	Started					: BOOL;
+	Resumed					: BOOL;
 	bLightCurtainEntered	: R_TRIG;
 	bLightCurtainExited		: F_TRIG;
 	safeToOpenDoors			: BOOL;

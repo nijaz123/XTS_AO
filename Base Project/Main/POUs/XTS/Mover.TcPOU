@@ -24,14 +24,16 @@ VAR_OUTPUT
 END_VAR
 VAR
 	// Motion commands
-	fbPower			: MC_Power;
-	fbReset			: MC_Reset;
-	fbHaltCA		: MC_HaltCA;
-	fbMoveAbsCA		: MC_MoveAbsoluteCA;
+	fbPower					: MC_Power;
+	fbReset					: MC_Reset;
+	fbHaltCA				: MC_HaltCA;
+	fbMoveAbsCA				: MC_MoveAbsoluteCA;
+	fbMoveAbsCABlended		: MC_MoveAbsoluteCA;
 	
-	//Temporary for Testing
-	iInteger	: INT;
-	bdummy: BOOL;
+	bDummy					: BOOL;
+	PosLow					: LREAL;
+	PosHigh					: LREAL;
+	
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -71,11 +73,11 @@ CASE Step OF
 	
 	IF NOT fbMoveAbsCA.Busy AND NOT fbMoveAbsCA.Done THEN			//Add additional condition that the doors are not unlcoked
 			fbMoveAbsCA.Execute			:= TRUE;
-			fbMoveAbsCA.Position		:= GVL.Station[GVL.startStation].Position+100;
+			fbMoveAbsCA.Position		:= GVL.Station[GVL.startStation].Position+2000;
 			fbMoveAbsCA.Velocity		:= 1000.0;										// parameterize
 			fbMoveAbsCA.Direction		:= MC_Positive_Direction;						// usually positive
-		ELSE
-			fbMoveAbsCA.Execute			:= FALSE;
+		//ELSE
+			//fbMoveAbsCA.Execute			:= FALSE;
 		END_IF
 		// check for error
 		IF fbMoveAbsCA.Error THEN
@@ -84,18 +86,23 @@ CASE Step OF
 			fbMoveAbsCA.Execute	:= FALSE;
 		END_IF
 		// check for move complete THEN proceed to starting station
-		IF fbMoveAbsCA.Done THEN
-			fbMoveAbsCA.Execute			:= TRUE;
-			fbMoveAbsCA.Position		:= GVL.Station[GVL.startStation].Position;
-			fbMoveAbsCA.Velocity		:= 1000.0;
-			Step				:= MoverSequence.MovingToStart;
+		IF fbMoveAbsCA.Busy AND Position > 1500.0 AND Position < 6900.0 THEN 		//When mover sits at position 0 the values jump +-0 so an asdditional condition must be used
+			fbMoveAbsCABlended.Execute		:= TRUE;
+			//bDummy							:= TRUE;
+			fbMoveAbsCABlended.Position		:= GVL.Station[GVL.startStation].Position;
+			fbMoveAbsCABlended.Velocity		:= 1000.0;
+			fbMoveAbsCABlended.BufferMode	:= mcAborting;
+			fbMoveAbsCABlended.Direction 	:= MC_Positive_Direction;
+			Step							:= MoverSequence.AtQueue;
 		END_IF
 		
 	//-----------------------------------------------------------------------------------------------------------------------
 	MoverSequence.AtQueue:	
 	
-	IF fbMoveAbsCA.Done THEN
-		fbMoveAbsCA.Execute			:= FALSE;
+	IF fbMoveAbsCABlended.Busy THEN
+		fbMoveAbsCABlended.Execute			:= FALSE;
+		fbMoveAbsCA.Execute					:= FALSE;
+		Step								:= MoverSequence.MovingToStart;
 	END_IF
 	
 	
@@ -209,8 +216,7 @@ CASE Step OF
 		IF fbMoveAbsCA.Error THEN
 			Error				:= fbMoveAbsCA.ErrorId;
 			Step				:= MoverSequence.Error;
-			fbMoveAbsCA(Axis	:= AxisReference,
-						Execute	:= FALSE);
+			fbMoveAbsCA.Execute	:= FALSE;
 		END_IF
 		// check for move complete
 		IF fbMoveAbsCA.Done THEN
@@ -242,7 +248,7 @@ END_CASE
 	fbReset(Axis := AxisReference);
 	fbHaltCA(Axis := AxisReference);
 	fbMoveAbsCA(Axis := AxisReference);
-
+	fbMoveAbsCABlended(Axis := AxisReference);
 
 ]]></ST>
     </Implementation>
@@ -275,14 +281,21 @@ END_CASE
       <LineId Id="422" Count="1" />
       <LineId Id="429" Count="0" />
       <LineId Id="431" Count="3" />
-      <LineId Id="439" Count="11" />
-      <LineId Id="455" Count="1" />
+      <LineId Id="469" Count="0" />
+      <LineId Id="440" Count="10" />
+      <LineId Id="455" Count="0" />
+      <LineId Id="474" Count="0" />
+      <LineId Id="456" Count="0" />
       <LineId Id="454" Count="0" />
+      <LineId Id="464" Count="0" />
+      <LineId Id="468" Count="0" />
       <LineId Id="453" Count="0" />
       <LineId Id="430" Count="0" />
       <LineId Id="457" Count="3" />
       <LineId Id="424" Count="0" />
-      <LineId Id="461" Count="1" />
+      <LineId Id="461" Count="0" />
+      <LineId Id="465" Count="1" />
+      <LineId Id="462" Count="0" />
       <LineId Id="425" Count="0" />
       <LineId Id="428" Count="0" />
       <LineId Id="182" Count="0" />
@@ -347,7 +360,8 @@ END_CASE
       <LineId Id="82" Count="2" />
       <LineId Id="86" Count="0" />
       <LineId Id="90" Count="1" />
-      <LineId Id="96" Count="10" />
+      <LineId Id="96" Count="5" />
+      <LineId Id="103" Count="3" />
       <LineId Id="108" Count="1" />
       <LineId Id="88" Count="0" />
       <LineId Id="110" Count="1" />
