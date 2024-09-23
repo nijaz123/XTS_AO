@@ -17,8 +17,7 @@ TYPE XTSSequence :
 	Run,
 	Stop,
 	Stopping,
-	Pause,
-	Pausing,
+	Paused,
 	Standby,
 	Error,
 	Waiting
@@ -90,12 +89,7 @@ END_TYPE
               <l n="LanguageTexts" t="ArrayList" />
             </o>
             <o>
-              <v n="TextID">"Pause"</v>
-              <v n="TextDefault">""</v>
-              <l n="LanguageTexts" t="ArrayList" />
-            </o>
-            <o>
-              <v n="TextID">"Pausing"</v>
+              <v n="TextID">"Paused"</v>
               <v n="TextDefault">""</v>
               <l n="LanguageTexts" t="ArrayList" />
             </o>

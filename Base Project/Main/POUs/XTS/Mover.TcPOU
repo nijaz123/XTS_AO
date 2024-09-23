@@ -6,9 +6,9 @@ VAR_INPUT
 	Enable			: BOOL;				// Request mover enable
 	toStart			: BOOL;				// Request mover go to start position
 	toNext			: BOOL;				// Request mover go to next station	
-	toStop			: BOOL;				// Request mover to stop - meaning the movers will be stop, removed from group, and power will be shutdown to the track via an E-Stop or HMI.Stop		
+	toStop			: BOOL;				// Request mover to stop - meaning the movers will be stop, removed from group, and power will be shutdown to the track via an E-Stop or HMI.Stop	
+	toPause			: BOOL;				// Request mover to pause	
 	toDisable		: BOOL;				// Request mover to disable power	
-	toPause			: BOOL;				// Request movers to pause in place
 	toQueue			: BOOL;				// Request current mover at starting station to join the back of the queue
 END_VAR
 VAR_OUTPUT
@@ -270,11 +270,9 @@ END_CASE
       <LineId Id="139" Count="0" />
       <LineId Id="213" Count="1" />
       <LineId Id="211" Count="0" />
-      <LineId Id="299" Count="0" />
+      <LineId Id="503" Count="2" />
       <LineId Id="314" Count="0" />
-      <LineId Id="301" Count="0" />
-      <LineId Id="315" Count="0" />
-      <LineId Id="304" Count="0" />
+      <LineId Id="502" Count="0" />
       <LineId Id="190" Count="0" />
       <LineId Id="188" Count="0" />
       <LineId Id="7" Count="0" />
@@ -311,16 +309,8 @@ END_CASE
       <LineId Id="327" Count="10" />
       <LineId Id="339" Count="3" />
       <LineId Id="326" Count="0" />
+      <LineId Id="490" Count="11" />
       <LineId Id="316" Count="0" />
-      <LineId Id="318" Count="1" />
-      <LineId Id="353" Count="1" />
-      <LineId Id="320" Count="0" />
-      <LineId Id="323" Count="0" />
-      <LineId Id="348" Count="1" />
-      <LineId Id="358" Count="0" />
-      <LineId Id="324" Count="0" />
-      <LineId Id="317" Count="0" />
-      <LineId Id="241" Count="0" />
       <LineId Id="149" Count="0" />
       <LineId Id="8" Count="3" />
       <LineId Id="404" Count="0" />

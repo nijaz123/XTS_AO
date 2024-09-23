@@ -49,54 +49,39 @@ FOR i := 1 TO gvl.NUM_ZONES DO
 END_FOR
 
 // check for HMI STOP/PAUSE
-IF HMI.Stop THEN
-	HMI.Stop	:= FALSE;
+IF HMI.E_Stop THEN
+	HMI.E_Stop	:= FALSE;
 	Step		:= XTSSequence.Stop;
-ELSIF HMI.Pause THEN
-	HMI.Pause	:= FALSE;
-	Step		:= XTSSequence.Pause;
 END_IF
 
 CASE Step OF
 
 //-----------------------------------------------------------------------------------------------------------------------	
 	XTSSequence.Off:
-		// state waiting for start command		----	Movers are off
-		
-		
+		// state waiting for HMI.Start
 		Initialize();
-
-			IF HMI.StartOver THEN
-				Step		:= XTSSequence.EnableMovers;
-				Started := TRUE;
-				HMI.StartOver := FALSE;
-			END_IF
-			
-			IF HMI.Resume THEN
-				Step			:= XTSSequence.EnableMovers;
-				Resumed := TRUE;
-				HMI.Resume := FALSE;
-			END_IF
+		IF HMI.Start THEN
+			Step		:= XTSSequence.EnableMovers;
+			Started 	:= TRUE;
+			HMI.Start 	:= FALSE;
+		END_IF
 
 //-----------------------------------------------------------------------------------------------------------------------	
-	XTSSequence.Pause:
+	XTSSequence.Paused:
+		//state waiting for HMI.Start or HMI.Resume
+		IF HMI.Start THEN
+			Step		:= XTSSequence.EnableMovers;
+			Started 	:= TRUE;
+			HMI.Start 	:= FALSE;
+		END_IF
 	
-	FOR i := 1 TO GVL.NUM_MOVERS  DO
-		GVL.Mover[i].toPause := TRUE;
-	END_FOR
+		IF HMI.Resume THEN
+			Step		:= XTSSequence.EnableMovers;
+			Resumed 	:= TRUE;
+			HMI.Resume 	:= FALSE;
+			HMI.Stop  	:= FALSE;
+		END_IF
 	
-	Started := FALSE;
-	Resumed := FALSE;
-	Step := XTSSequence.Pausing;
-	
-//-----------------------------------------------------------------------------------------------------------------------	
-	XTSSequence.Pausing:
-	
-	// Waiting for all to come to a full stop
-	IF allMoversNotMoving THEN
-		Step		:= XTSSequence.Off;
-	END_IF
-
 //-----------------------------------------------------------------------------------------------------------------------	
 	XTSSequence.Stop:
 	
@@ -104,15 +89,15 @@ CASE Step OF
 		GVL.Mover[i].toStop := TRUE;
 	END_FOR
 	
-	Started := FALSE;
-	Resumed := FALSE;
+	Started 	:= FALSE;
+	Resumed 	:= FALSE;
 	Step		:= XTSSequence.Stopping;
 		
 //-----------------------------------------------------------------------------------------------------------------------	
 	XTSSequence.Stopping:
 		// Waiting for all to come to a full stop
 		
-allMoversHalted				:= TRUE;
+	allMoversHalted		:= TRUE;
 	
 		FOR i := 1 TO GVL.NUM_MOVERS DO
 			IF GVL.Mover[i].AxisReference.Status.Moving THEN
@@ -234,11 +219,8 @@ IF HMI.bzone0Stop = FALSE THEN
 END_IF	
 //-----------------------------------------------------------------------------------------------------------------------	
 	XTSSequence.Run:
-	(*
-	FOR i:= 1 TO GVL.NUM_MOVERS DO
-			GVL.Mover[i].toNext	:= TRUE;
-		END_FOR
-	*)
+
+IF HMI.Stop = FALSE THEN
 	
 	// LOAD TRAY STATION
 	IF GVL.Station[1].Step = StationSequence.MoverPresent THEN
@@ -331,16 +313,22 @@ END_IF
 	
 	// Starting over on the condition that movers are stationary and HMI.Startover has been pressed.
 	IF allMoversNotMoving THEN				
-		IF HMI.StartOver THEN
+		IF HMI.Start THEN
 			FOR i := 2 TO GVL.NUM_STATIONS DO
 				IF GVL.Station[i].Step = StationSequence.MoverPresent THEN
 				GVL.Station[i].bMoveToStart := TRUE;
 				END_IF
 			END_FOR	
-			HMI.StartOver := FALSE;
+			HMI.Start := FALSE;
 		END_IF
 	END_IF
 	
+ELSE
+	
+	Step	:= XTSSequence.Paused;
+	
+END_IF
+
 END_CASE
 
 fbEnableGroup(AxesGroup	:= stCaGroupRef);
@@ -423,7 +411,25 @@ END_IF]]></ST>
       </Implementation>
     </Action>
     <LineIds Name="Main">
-      <LineId Id="1" Count="225" />
+      <LineId Id="1" Count="26" />
+      <LineId Id="357" Count="0" />
+      <LineId Id="32" Count="6" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="43" Count="4" />
+      <LineId Id="340" Count="0" />
+      <LineId Id="377" Count="0" />
+      <LineId Id="375" Count="0" />
+      <LineId Id="386" Count="0" />
+      <LineId Id="388" Count="3" />
+      <LineId Id="387" Count="0" />
+      <LineId Id="378" Count="0" />
+      <LineId Id="381" Count="4" />
+      <LineId Id="380" Count="0" />
+      <LineId Id="379" Count="0" />
+      <LineId Id="74" Count="136" />
+      <LineId Id="374" Count="0" />
+      <LineId Id="360" Count="1" />
+      <LineId Id="217" Count="9" />
       <LineId Id="318" Count="0" />
       <LineId Id="320" Count="8" />
       <LineId Id="319" Count="0" />
@@ -439,7 +445,12 @@ END_IF]]></ST>
       <LineId Id="317" Count="0" />
       <LineId Id="300" Count="0" />
       <LineId Id="330" Count="0" />
-      <LineId Id="301" Count="12" />
+      <LineId Id="370" Count="3" />
+      <LineId Id="301" Count="0" />
+      <LineId Id="362" Count="0" />
+      <LineId Id="364" Count="0" />
+      <LineId Id="363" Count="0" />
+      <LineId Id="303" Count="10" />
     </LineIds>
     <LineIds Name="Main.Initialize">
       <LineId Id="31" Count="7" />
@@ -447,7 +458,9 @@ END_IF]]></ST>
       <LineId Id="40" Count="0" />
     </LineIds>
     <LineIds Name="Main.LightCurtainCheck">
-      <LineId Id="1" Count="22" />
+      <LineId Id="1" Count="5" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="8" Count="15" />
     </LineIds>
     <LineIds Name="Main.ShuttleMoverToQueue">
       <LineId Id="1" Count="12" />
