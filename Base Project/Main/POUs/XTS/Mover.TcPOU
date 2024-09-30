@@ -41,6 +41,8 @@ END_VAR
 
 // feedback
 
+
+
 	AxisReference.ReadStatus();
 
 	Enabled		:= NOT AxisReference.Status.Disabled;
@@ -254,6 +256,7 @@ END_CASE
     </Implementation>
     <LineIds Name="Mover">
       <LineId Id="1" Count="2" />
+      <LineId Id="506" Count="1" />
       <LineId Id="411" Count="1" />
       <LineId Id="410" Count="0" />
       <LineId Id="4" Count="0" />

@@ -1305,7 +1305,7 @@ External Setpoint Generation:
 		</DataType>
 	</DataTypes>
 	<Project GUID="{DD3A0B29-8E7C-4E32-989D-B0222C998777}" Name="Main" PrjFilePath="..\..\Main\Main.plcproj" TmcFilePath="..\..\Main\Main.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-		<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcHash="{D5644E48-10D5-FEB8-FA76-908FE01FA814}" TmcPath="Main\Main.tmc">
+		<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcHash="{F680E4D6-AB48-0B08-B724-CF0986F0BB3A}" TmcPath="Main\Main.tmc">
 			<Name>Main Instance</Name>
 			<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 			<Vars VarGrpType="2" AreaNo="1">
@@ -1313,14 +1313,6 @@ External Setpoint Generation:
 				<Var>
 					<Name>Main.stCaGroupRef.PlcToNc</Name>
 					<Type GUID="{0E2E3852-A98C-4AF3-81E2-209EE128940C}" Namespace="MC">CDT_PLCTOMC_GROUP</Type>
-				</Var>
-				<Var>
-					<Name>SAFETY.err_ack</Name>
-					<Type>BOOL</Type>
-				</Var>
-				<Var>
-					<Name>SAFETY.run</Name>
-					<Type>BOOL</Type>
 				</Var>
 				<Var>
 					<Name>GVL.Mover[1].AxisReference.PlcToNc</Name>
@@ -1401,6 +1393,102 @@ External Setpoint Generation:
 				<Var>
 					<Name>GVL.Mover[20].AxisReference.PlcToNc</Name>
 					<Type GUID="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" Namespace="MC">PLCTONC_AXIS_REF</Type>
+				</Var>
+				<Var>
+					<Name>HMI.LockDoors</Name>
+					<Comment><![CDATA[Linked to SAFETY Alias]]></Comment>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>SafetyGVL.err_ack</Name>
+					<Comment><![CDATA[OUTPUTS TO SAFETY GROUP]]></Comment>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>SafetyGVL.run</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>SafetyGVL.DoorsClosed</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>SafetyGVL.ResetCurtains</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.oBacklight1</Name>
+					<Comment><![CDATA[-----------------------------------------------------------------------------------------------------------------------------------
+OUTPUTS]]></Comment>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.oBacklight2</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.oBacklight3</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.oBacklight4</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.oBacklight5</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.oBacklight6</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.oBacklight7</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.oBacklight8</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.oBacklight9</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.oBacklight10</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.oBacklight11</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.oBacklight12</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.oBacklight13</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.oBacklight14</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.oBacklight15</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.oBacklight16</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.oEStopLight</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.oConveyor</Name>
+					<Type>BOOL</Type>
 				</Var>
 			</Vars>
 			<Vars VarGrpType="1">
@@ -1490,7 +1578,136 @@ External Setpoint Generation:
 					<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
 				</Var>
 				<Var>
-					<Name>SAFETY.bEstopSet</Name>
+					<Name>SafetyGVL.CurtainsOK</Name>
+					<Comment><![CDATA[INPUTS FROM SAFETY GROUP]]></Comment>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>SafetyGVL.AllSafetyOK</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iTrayDetectSensor</Name>
+					<Comment><![CDATA[INPUTS]]></Comment>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iDoor1Opened</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iDoor2Opened</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iDoor3Opened</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iDoor4Opened</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iMainAirPressure</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iCircuitBreaker24VDC</Name>
+					<Comment><![CDATA[------XTS Power Monitor Breakers	
+- EL1809 Mod1]]></Comment>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iCircuitBreakerSafety</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iXTS_Module1</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iXTS_Module2</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iXTS_Module3</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iXTS_Module4</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iXTS_Module5</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iXTS_Module6</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iLubricationOn</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iPowerSupply48VDC1</Name>
+					<Comment><![CDATA[- EL1809 Mod2]]></Comment>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iPowerSupply48VDC2</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iPowerSupply48VDC3</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iLubricationLevelOK</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iLubricationDone</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iCircuitBreaker48VDC1</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iCircuitBreaker48VDC2</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iCircuitBreaker48VDC3</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iCircuitBreakerXTSModule1</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iCircuitBreakerXTSModule2</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iCircuitBreakerXTSModule3</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iCircuitBreakerXTSModule4</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iCircuitBreakerXTSModule5</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iCircuitBreakerXTSModule6</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.iBrakeResistorON</Name>
 					<Type>BOOL</Type>
 				</Var>
 			</Vars>
@@ -1656,6 +1873,48 @@ External Setpoint Generation:
 	</Project>
 	<Mappings>
 		<OwnerA Name="Main Instance">
+			<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 1 (EK1100)^Term 11 (EL2008)">
+				<Link VarA="PlcTask Outputs^IOGVL.oConveyor" VarB="Channel 2^Output" Size="1"/>
+				<Link VarA="PlcTask Outputs^IOGVL.oEStopLight" VarB="Channel 1^Output" Size="1"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 1 (EK1100)^Term 16 (EL2911)">
+				<Link VarA="PlcTask Inputs^SafetyGVL.AllSafetyOK" VarB="StandardInputs^Standard Out Var 9" Size="1"/>
+				<Link VarA="PlcTask Inputs^SafetyGVL.CurtainsOK" VarB="StandardInputs^Standard Out Var 12" Size="1"/>
+				<Link VarA="PlcTask Outputs^HMI.LockDoors" VarB="StandardOutputs^Standard In Var 14" Size="1"/>
+				<Link VarA="PlcTask Outputs^SafetyGVL.ResetCurtains" VarB="StandardOutputs^Standard In Var 11" Size="1"/>
+				<Link VarA="PlcTask Outputs^SafetyGVL.err_ack" VarB="StandardOutputs^Standard In Var 1" Size="1"/>
+				<Link VarA="PlcTask Outputs^SafetyGVL.run" VarB="StandardOutputs^Standard In Var 2" Size="1"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 1 (EK1100)^Term 3 (EL1809)">
+				<Link VarA="PlcTask Inputs^IOGVL.iCircuitBreaker24VDC" VarB="Channel 1^Input" Size="1"/>
+				<Link VarA="PlcTask Inputs^IOGVL.iCircuitBreakerSafety" VarB="Channel 2^Input" Size="1"/>
+				<Link VarA="PlcTask Inputs^IOGVL.iLubricationOn" VarB="Channel 9^Input" Size="1"/>
+				<Link VarA="PlcTask Inputs^IOGVL.iXTS_Module1" VarB="Channel 3^Input" Size="1"/>
+				<Link VarA="PlcTask Inputs^IOGVL.iXTS_Module2" VarB="Channel 4^Input" Size="1"/>
+				<Link VarA="PlcTask Inputs^IOGVL.iXTS_Module3" VarB="Channel 5^Input" Size="1"/>
+				<Link VarA="PlcTask Inputs^IOGVL.iXTS_Module4" VarB="Channel 6^Input" Size="1"/>
+				<Link VarA="PlcTask Inputs^IOGVL.iXTS_Module5" VarB="Channel 7^Input" Size="1"/>
+				<Link VarA="PlcTask Inputs^IOGVL.iXTS_Module6" VarB="Channel 8^Input" Size="1"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 1 (EK1100)^Term 4 (EL1809)">
+				<Link VarA="PlcTask Inputs^IOGVL.iBrakeResistorON" VarB="Channel 12^Input" Size="1"/>
+				<Link VarA="PlcTask Inputs^IOGVL.iLubricationDone" VarB="Channel 5^Input" Size="1"/>
+				<Link VarA="PlcTask Inputs^IOGVL.iLubricationLevelOK" VarB="Channel 4^Input" Size="1"/>
+				<Link VarA="PlcTask Inputs^IOGVL.iPowerSupply48VDC1" VarB="Channel 1^Input" Size="1"/>
+				<Link VarA="PlcTask Inputs^IOGVL.iPowerSupply48VDC2" VarB="Channel 2^Input" Size="1"/>
+				<Link VarA="PlcTask Inputs^IOGVL.iPowerSupply48VDC3" VarB="Channel 3^Input" Size="1"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 1 (EK1100)^Term 8 (EL1809)">
+				<Link VarA="PlcTask Inputs^IOGVL.iDoor1Opened" VarB="Channel 2^Input" Size="1"/>
+				<Link VarA="PlcTask Inputs^IOGVL.iDoor2Opened" VarB="Channel 3^Input" Size="1"/>
+				<Link VarA="PlcTask Inputs^IOGVL.iDoor3Opened" VarB="Channel 4^Input" Size="1"/>
+				<Link VarA="PlcTask Inputs^IOGVL.iDoor4Opened" VarB="Channel 5^Input" Size="1"/>
+				<Link VarA="PlcTask Inputs^IOGVL.iMainAirPressure" VarB="Channel 6^Input" Size="1"/>
+				<Link VarA="PlcTask Inputs^IOGVL.iTrayDetectSensor" VarB="Channel 1^Input" Size="1"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 1 (EK1100)^Term 9 (EL2008)">
+				<Link VarA="PlcTask Outputs^IOGVL.oBacklight1" VarB="Channel 1^Output" Size="1"/>
+			</OwnerB>
 			<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 1">
 				<Link VarA="PlcTask Inputs^GVL.Mover[1].AxisReference.NcToPlc" VarB="Outputs^ToPlc"/>
 				<Link VarA="PlcTask Outputs^GVL.Mover[1].AxisReference.PlcToNc" VarB="Inputs^FromPlc"/>

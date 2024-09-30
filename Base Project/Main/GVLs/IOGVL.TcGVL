@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.8">
+  <GVL Name="IOGVL" Id="{c365e6ba-e667-0546-3d34-7626af9a52f9}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	
+//INPUTS
+iTrayDetectSensor	AT %I*	:	BOOL;
+iDoor1Opened		AT %I*	:	BOOL;		
+iDoor2Opened		AT %I*	:	BOOL;
+iDoor3Opened		AT %I*	:	BOOL;
+iDoor4Opened		AT %I*	:	BOOL;
+iMainAirPressure 	AT %I*	:	BOOL;
+
+//------XTS Power Monitor Breakers	
+//- EL1809 Mod1
+iCircuitBreaker24VDC			AT %I*	:	BOOL;
+iCircuitBreakerSafety			AT %I*	:	BOOL;
+iXTS_Module1					AT %I*	:	BOOL;
+iXTS_Module2					AT %I*	:	BOOL;
+iXTS_Module3					AT %I*	:	BOOL;
+iXTS_Module4					AT %I*	:	BOOL;
+iXTS_Module5					AT %I*	:	BOOL;
+iXTS_Module6					AT %I*	:	BOOL;
+iLubricationOn					AT %I*	:	BOOL;
+//- EL1809 Mod2
+iPowerSupply48VDC1				AT %I*	:	BOOL;
+iPowerSupply48VDC2				AT %I*	:	BOOL;
+iPowerSupply48VDC3				AT %I*	:	BOOL;
+iLubricationLevelOK				AT %I*	:	BOOL;
+iLubricationDone				AT %I*	:	BOOL;
+iCircuitBreaker48VDC1			AT %I*	:	BOOL;
+iCircuitBreaker48VDC2			AT %I*	:	BOOL;
+iCircuitBreaker48VDC3			AT %I*	:	BOOL;
+iCircuitBreakerXTSModule1		AT %I*	:	BOOL;
+iCircuitBreakerXTSModule2		AT %I*	:	BOOL;
+iCircuitBreakerXTSModule3		AT %I*	:	BOOL;
+iCircuitBreakerXTSModule4		AT %I*	:	BOOL;
+iCircuitBreakerXTSModule5		AT %I*	:	BOOL;
+iCircuitBreakerXTSModule6		AT %I*	:	BOOL;
+iBrakeResistorON				AT %I*	:	BOOL;
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+//OUTPUTS
+oBacklight1			AT %Q*	:	BOOL;
+oBacklight2			AT %Q*	:	BOOL;
+oBacklight3			AT %Q*	:	BOOL;
+oBacklight4			AT %Q*	:	BOOL;
+oBacklight5			AT %Q*	:	BOOL;
+oBacklight6			AT %Q*	:	BOOL;
+oBacklight7			AT %Q*	:	BOOL;
+oBacklight8			AT %Q*	:	BOOL;
+oBacklight9			AT %Q*	:	BOOL;
+oBacklight10		AT %Q*	:	BOOL;
+oBacklight11		AT %Q*	:	BOOL;
+oBacklight12		AT %Q*	:	BOOL;
+oBacklight13		AT %Q*	:	BOOL;
+oBacklight14		AT %Q*	:	BOOL;
+oBacklight15		AT %Q*	:	BOOL;
+oBacklight16		AT %Q*	:	BOOL;
+oEStopLight			AT %Q*	:	BOOL;
+oConveyor			AT %Q*	:	BOOL;
+
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

@@ -22,6 +22,15 @@ VAR
 	bLightCurtainExited		: F_TRIG;
 	safeToOpenDoors			: BOOL;
 	allMoversNotMoving		: BOOL;
+	
+	//Timers for generating a pulse
+	Pulser		: TP;
+	PulseTON	: TON;
+	PulseTOF	: TOF;
+	OnDuration	: TIME := T#500MS;
+	OFFDuration	: TIME := T#1000MS;
+	bCycleBit	: BOOL;
+
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[(* this program handles the main sequencer of this machine *)
@@ -311,6 +320,7 @@ IF HMI.Stop = FALSE THEN
 		END_IF
 	END_IF
 	
+	
 	// Starting over on the condition that movers are stationary and HMI.Startover has been pressed.
 	IF allMoversNotMoving THEN				
 		IF HMI.Start THEN
@@ -334,14 +344,59 @@ END_CASE
 fbEnableGroup(AxesGroup	:= stCaGroupRef);
 LightCurtainCheck();
 ShuttleMoverToQueue();
+DoorsClosedMonitor();
+
 
 IF allMoversNotMoving THEN
 	HMI.SafeToUnlock := TRUE;
 ELSE
 	HMI.SafeToUnlock := FALSE;
 END_IF
+
+
+
+
+
+
+
+
 ]]></ST>
     </Implementation>
+    <Action Name="DoorsClosedMonitor" Id="{d8e81158-2355-0cf6-0b0a-31222736279d}">
+      <Implementation>
+        <ST><![CDATA[
+
+
+
+
+IF IOGVL.iDoor1Opened OR IOGVL.iDoor2Opened OR IOGVL.iDoor3Opened OR IOGVL.iDoor4Opened THEN
+	SafetyGVL.DoorsClosed := FALSE;
+ELSE
+	SafetyGVL.DoorsClosed := TRUE;
+END_IF
+
+
+PulseTON(IN := NOT SafetyGVL.AllSafetyOK AND NOT bCycleBit, PT := OnDuration);
+PulseTOF(IN := bCycleBit, PT := OFFDuration);
+
+IF PulseTON.Q THEN
+	bCycleBit := TRUE;
+	IOGVL.oEStopLight := TRUE;
+ELSE 
+	IOGVL.oEStopLight := FALSE;
+END_IF
+
+IF PulseTOF.Q THEN
+	bCycleBit := FALSE;
+END_IF
+
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Action>
     <Method Name="Initialize" Id="{4ea4d127-ec11-0953-31c9-c3462af2cac5}">
       <Declaration><![CDATA[METHOD Initialize : BOOL
 VAR_INPUT
@@ -434,6 +489,7 @@ END_IF]]></ST>
       <LineId Id="320" Count="8" />
       <LineId Id="319" Count="0" />
       <LineId Id="227" Count="67" />
+      <LineId Id="397" Count="0" />
       <LineId Id="333" Count="0" />
       <LineId Id="329" Count="0" />
       <LineId Id="295" Count="0" />
@@ -450,7 +506,20 @@ END_IF]]></ST>
       <LineId Id="362" Count="0" />
       <LineId Id="364" Count="0" />
       <LineId Id="363" Count="0" />
-      <LineId Id="303" Count="10" />
+      <LineId Id="303" Count="3" />
+      <LineId Id="415" Count="1" />
+      <LineId Id="307" Count="5" />
+      <LineId Id="404" Count="0" />
+      <LineId Id="413" Count="1" />
+      <LineId Id="410" Count="0" />
+      <LineId Id="406" Count="0" />
+      <LineId Id="405" Count="0" />
+      <LineId Id="402" Count="0" />
+      <LineId Id="395" Count="0" />
+      <LineId Id="313" Count="0" />
+    </LineIds>
+    <LineIds Name="Main.DoorsClosedMonitor">
+      <LineId Id="1" Count="30" />
     </LineIds>
     <LineIds Name="Main.Initialize">
       <LineId Id="31" Count="7" />

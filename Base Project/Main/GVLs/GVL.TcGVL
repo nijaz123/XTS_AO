@@ -24,10 +24,8 @@ VAR_GLOBAL
 	Zone			: ARRAY[1..GVL.NUM_ZONES] OF zone;
 	newCallTime: LREAL;
 	
-	
 	//-------------ADDED BY NIJAZ-------------
 	dsMoverControlFlags		:	MoverControlFlags;
-	bzone0Stop				:	BOOL;
 	
 END_VAR]]></Declaration>
   </GVL>

@@ -11,6 +11,11 @@ VAR_GLOBAL
 	SafeToUnlock			: BOOL;
 	dsMoverControlFlags		: MoverControlFlags;
 	ShuttleMover			: BOOL;
+	
+	
+	//Linked to SAFETY Alias
+	LockDoors		AT %Q*	: BOOL;		
+	
 END_VAR]]></Declaration>
   </GVL>
 </TcPlcObject>
