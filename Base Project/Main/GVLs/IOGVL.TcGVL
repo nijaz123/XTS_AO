@@ -60,6 +60,8 @@ oBacklight15		AT %Q*	:	BOOL;
 oBacklight16		AT %Q*	:	BOOL;
 oEStopLight			AT %Q*	:	BOOL;
 oConveyor			AT %Q*	:	BOOL;
+oLubeON				AT %Q*	:	BOOL;
+
 
 END_VAR]]></Declaration>
   </GVL>

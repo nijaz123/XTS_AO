@@ -22,6 +22,8 @@ TYPE MoverSequence :
 	Paused,
 	Disabling,
 	Disabled,
+	Reset,
+	Resetting,
 	Waiting	
 );
 END_TYPE

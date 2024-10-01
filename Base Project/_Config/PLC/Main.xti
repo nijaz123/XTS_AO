@@ -1305,7 +1305,7 @@ External Setpoint Generation:
 		</DataType>
 	</DataTypes>
 	<Project GUID="{DD3A0B29-8E7C-4E32-989D-B0222C998777}" Name="Main" PrjFilePath="..\..\Main\Main.plcproj" TmcFilePath="..\..\Main\Main.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-		<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcHash="{F680E4D6-AB48-0B08-B724-CF0986F0BB3A}" TmcPath="Main\Main.tmc">
+		<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcHash="{297DB15B-0858-4DC5-7FD2-87130C51D151}" TmcPath="Main\Main.tmc">
 			<Name>Main Instance</Name>
 			<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 			<Vars VarGrpType="2" AreaNo="1">
@@ -1400,23 +1400,6 @@ External Setpoint Generation:
 					<Type>BOOL</Type>
 				</Var>
 				<Var>
-					<Name>SafetyGVL.err_ack</Name>
-					<Comment><![CDATA[OUTPUTS TO SAFETY GROUP]]></Comment>
-					<Type>BOOL</Type>
-				</Var>
-				<Var>
-					<Name>SafetyGVL.run</Name>
-					<Type>BOOL</Type>
-				</Var>
-				<Var>
-					<Name>SafetyGVL.DoorsClosed</Name>
-					<Type>BOOL</Type>
-				</Var>
-				<Var>
-					<Name>SafetyGVL.ResetCurtains</Name>
-					<Type>BOOL</Type>
-				</Var>
-				<Var>
 					<Name>IOGVL.oBacklight1</Name>
 					<Comment><![CDATA[-----------------------------------------------------------------------------------------------------------------------------------
 OUTPUTS]]></Comment>
@@ -1488,6 +1471,27 @@ OUTPUTS]]></Comment>
 				</Var>
 				<Var>
 					<Name>IOGVL.oConveyor</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>IOGVL.oLubeON</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>SafetyGVL.err_ack</Name>
+					<Comment><![CDATA[OUTPUTS TO SAFETY GROUP]]></Comment>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>SafetyGVL.run</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>SafetyGVL.DoorsClosed</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>SafetyGVL.ResetCurtains</Name>
 					<Type>BOOL</Type>
 				</Var>
 			</Vars>
@@ -1576,15 +1580,6 @@ OUTPUTS]]></Comment>
 				<Var>
 					<Name>GVL.Mover[20].AxisReference.NcToPlc</Name>
 					<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
-				</Var>
-				<Var>
-					<Name>SafetyGVL.CurtainsOK</Name>
-					<Comment><![CDATA[INPUTS FROM SAFETY GROUP]]></Comment>
-					<Type>BOOL</Type>
-				</Var>
-				<Var>
-					<Name>SafetyGVL.AllSafetyOK</Name>
-					<Type>BOOL</Type>
 				</Var>
 				<Var>
 					<Name>IOGVL.iTrayDetectSensor</Name>
@@ -1708,6 +1703,19 @@ OUTPUTS]]></Comment>
 				</Var>
 				<Var>
 					<Name>IOGVL.iBrakeResistorON</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>SafetyGVL.CurtainsOK</Name>
+					<Comment><![CDATA[INPUTS FROM SAFETY GROUP]]></Comment>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>SafetyGVL.AllSafetyOK</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>SafetyGVL.EStopStatus</Name>
 					<Type>BOOL</Type>
 				</Var>
 			</Vars>
@@ -1873,6 +1881,16 @@ OUTPUTS]]></Comment>
 	</Project>
 	<Mappings>
 		<OwnerA Name="Main Instance">
+			<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 1 (EK1100)^Term 10 (EL2008)">
+				<Link VarA="PlcTask Outputs^IOGVL.oBacklight10" VarB="Channel 2^Output" Size="1"/>
+				<Link VarA="PlcTask Outputs^IOGVL.oBacklight11" VarB="Channel 3^Output" Size="1"/>
+				<Link VarA="PlcTask Outputs^IOGVL.oBacklight12" VarB="Channel 4^Output" Size="1"/>
+				<Link VarA="PlcTask Outputs^IOGVL.oBacklight13" VarB="Channel 5^Output" Size="1"/>
+				<Link VarA="PlcTask Outputs^IOGVL.oBacklight14" VarB="Channel 6^Output" Size="1"/>
+				<Link VarA="PlcTask Outputs^IOGVL.oBacklight15" VarB="Channel 7^Output" Size="1"/>
+				<Link VarA="PlcTask Outputs^IOGVL.oBacklight16" VarB="Channel 8^Output" Size="1"/>
+				<Link VarA="PlcTask Outputs^IOGVL.oBacklight9" VarB="Channel 1^Output" Size="1"/>
+			</OwnerB>
 			<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 1 (EK1100)^Term 11 (EL2008)">
 				<Link VarA="PlcTask Outputs^IOGVL.oConveyor" VarB="Channel 2^Output" Size="1"/>
 				<Link VarA="PlcTask Outputs^IOGVL.oEStopLight" VarB="Channel 1^Output" Size="1"/>
@@ -1880,6 +1898,7 @@ OUTPUTS]]></Comment>
 			<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 1 (EK1100)^Term 16 (EL2911)">
 				<Link VarA="PlcTask Inputs^SafetyGVL.AllSafetyOK" VarB="StandardInputs^Standard Out Var 9" Size="1"/>
 				<Link VarA="PlcTask Inputs^SafetyGVL.CurtainsOK" VarB="StandardInputs^Standard Out Var 12" Size="1"/>
+				<Link VarA="PlcTask Inputs^SafetyGVL.EStopStatus" VarB="StandardInputs^Standard Out Var 15" Size="1"/>
 				<Link VarA="PlcTask Outputs^HMI.LockDoors" VarB="StandardOutputs^Standard In Var 14" Size="1"/>
 				<Link VarA="PlcTask Outputs^SafetyGVL.ResetCurtains" VarB="StandardOutputs^Standard In Var 11" Size="1"/>
 				<Link VarA="PlcTask Outputs^SafetyGVL.err_ack" VarB="StandardOutputs^Standard In Var 1" Size="1"/>
@@ -1904,6 +1923,9 @@ OUTPUTS]]></Comment>
 				<Link VarA="PlcTask Inputs^IOGVL.iPowerSupply48VDC2" VarB="Channel 2^Input" Size="1"/>
 				<Link VarA="PlcTask Inputs^IOGVL.iPowerSupply48VDC3" VarB="Channel 3^Input" Size="1"/>
 			</OwnerB>
+			<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 1 (EK1100)^Term 7 (EL2042)">
+				<Link VarA="PlcTask Outputs^IOGVL.oLubeON" VarB="Channel 1^Output" Size="1"/>
+			</OwnerB>
 			<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 1 (EK1100)^Term 8 (EL1809)">
 				<Link VarA="PlcTask Inputs^IOGVL.iDoor1Opened" VarB="Channel 2^Input" Size="1"/>
 				<Link VarA="PlcTask Inputs^IOGVL.iDoor2Opened" VarB="Channel 3^Input" Size="1"/>
@@ -1914,6 +1936,13 @@ OUTPUTS]]></Comment>
 			</OwnerB>
 			<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 1 (EK1100)^Term 9 (EL2008)">
 				<Link VarA="PlcTask Outputs^IOGVL.oBacklight1" VarB="Channel 1^Output" Size="1"/>
+				<Link VarA="PlcTask Outputs^IOGVL.oBacklight2" VarB="Channel 2^Output" Size="1"/>
+				<Link VarA="PlcTask Outputs^IOGVL.oBacklight3" VarB="Channel 3^Output" Size="1"/>
+				<Link VarA="PlcTask Outputs^IOGVL.oBacklight4" VarB="Channel 4^Output" Size="1"/>
+				<Link VarA="PlcTask Outputs^IOGVL.oBacklight5" VarB="Channel 5^Output" Size="1"/>
+				<Link VarA="PlcTask Outputs^IOGVL.oBacklight6" VarB="Channel 6^Output" Size="1"/>
+				<Link VarA="PlcTask Outputs^IOGVL.oBacklight7" VarB="Channel 7^Output" Size="1"/>
+				<Link VarA="PlcTask Outputs^IOGVL.oBacklight8" VarB="Channel 8^Output" Size="1"/>
 			</OwnerB>
 			<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 1">
 				<Link VarA="PlcTask Inputs^GVL.Mover[1].AxisReference.NcToPlc" VarB="Outputs^ToPlc"/>

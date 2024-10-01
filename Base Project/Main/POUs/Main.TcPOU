@@ -20,8 +20,10 @@ VAR
 	Resumed					: BOOL;
 	bLightCurtainEntered	: R_TRIG;
 	bLightCurtainExited		: F_TRIG;
+	bEstopPressed			: F_TRIG;
 	safeToOpenDoors			: BOOL;
 	allMoversNotMoving		: BOOL;
+	bDummyEstopTest			: BOOL;
 	
 	//Timers for generating a pulse
 	Pulser		: TP;
@@ -30,7 +32,21 @@ VAR
 	OnDuration	: TIME := T#500MS;
 	OFFDuration	: TIME := T#1000MS;
 	bCycleBit	: BOOL;
-
+	
+	//M1 Detection
+	fbReadM1DetectMode		: ADSREAD;
+	fbReadM1DetectValid		: ADSREAD;
+	fbReadM1DetectActive	: ADSREAD;
+	fbWriteM1Detect			: ADSWRITE;
+	fbDelayM1Timer			: TON;
+	IdDetectionMode			: DINT;			// 0: Standard 1: Mover1
+	IsIdDetectionValid		: BOOL;			// M1 Detection has completed
+	IsIdDetectionActive		: BOOL;			// M1 Detection currently underway
+	iStepTest				: INT;
+	bDummyDetectionTest		: BOOL;
+	
+	
+	
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[(* this program handles the main sequencer of this machine *)
@@ -57,10 +73,19 @@ FOR i := 1 TO gvl.NUM_ZONES DO
 	GVL.Zone[i]();
 END_FOR
 
-// check for HMI STOP/PAUSE
-IF HMI.E_Stop THEN
-	HMI.E_Stop	:= FALSE;
-	Step		:= XTSSequence.Stop;
+IF HMI.ResetXTS_Error THEN
+	FOR i := 1 TO GVL.NUM_MOVERS DO
+		GVL.Mover[i].toReset := TRUE;
+	END_FOR
+	HMI.ResetXTS_Error := FALSE;
+END_IF
+
+
+// check for E-STOP
+bEstopPressed(CLK:=SafetyGVL.EStopStatus);
+IF bEstopPressed.Q OR bDummyEstopTest THEN
+	Step			:= XTSSequence.Stop;
+	bDummyEstopTest := FALSE;
 END_IF
 
 CASE Step OF
@@ -354,6 +379,89 @@ ELSE
 END_IF
 
 
+CASE iStepTest	OF
+0:
+
+	IF bDummyDetectionTest THEN
+		bDummyDetectionTest := FALSE;
+		iStepTest := 50;
+	END_IF
+
+10:// ------------------------------------------------------- begin checking for M1 detection mode setting
+		//Check for M1 Detaction Mode settings
+		fbReadM1DetectMode.NETID		:= '';
+		fbReadM1DetectMode.PORT			:= 351;
+		fbReadM1DetectMode.IDXGRP		:= GVL.pXtsProcessingUnit;
+		fbReadM1DetectMode.IDXOFFS		:= 16#03080246;
+		fbReadM1DetectMode.LEN			:= SIZEOF( IdDetectionMode );
+		fbReadM1DetectMode.DESTADDR		:= ADR( IdDetectionMode );
+		fbReadM1DetectMode.READ			:= TRUE;
+
+		iStepTest 						:= 20;
+		
+20:	// ------------------------------------------------------- Determine detection mode setting
+		fbReadM1DetectMode.READ			:= FALSE;
+		iStepTest 						:= 30;
+		
+30:// ------------------------------------------------------- Determine current M1 Detection Status
+		
+		fbWriteM1Detect.WRITE			:= FALSE;
+		
+		fbReadM1DetectValid.NETID		:= '';
+		fbReadM1DetectValid.PORT		:= 351;
+		fbReadM1DetectValid.IDXGRP		:= GVL.pXtsProcessingUnit;
+		fbReadM1DetectValid.IDXOFFS		:= 16#03080251;
+		fbReadM1DetectValid.LEN			:= SIZEOF( IsIdDetectionValid );
+		fbReadM1DetectValid.DESTADDR	:= ADR( IsIdDetectionValid );
+		fbReadM1DetectValid.READ		:= TRUE;
+		
+		fbReadM1DetectActive.NETID		:= '';
+		fbReadM1DetectActive.PORT		:= 351;
+		fbReadM1DetectActive.IDXGRP		:= GVL.pXtsProcessingUnit;
+		fbReadM1DetectActive.IDXOFFS	:= 16#03080268;
+		fbReadM1DetectActive.LEN		:= SIZEOF( IsIdDetectionActive );
+		fbReadM1DetectActive.DESTADDR	:= ADR( IsIdDetectionActive );
+		fbReadM1DetectActive.READ		:= TRUE;
+		
+		iStepTest 						:= 40;
+		
+40:// ------------------------------------------------------- Determine to activate M1 Detect or ignore
+
+		fbReadM1DetectValid.READ		:= FALSE;
+		fbReadM1DetectActive.READ		:= FALSE;
+		
+		iStepTest 						:= 50;
+		
+50:// ------------------------------------------------------- Begin M1 Detection
+
+		fbWriteM1Detect.NETID			:= '';
+		fbWriteM1Detect.PORT			:= 351;
+		fbWriteM1Detect.IDXGRP			:= GVL.pXtsProcessingUnit;
+		fbWriteM1Detect.IDXOFFS			:= 16#03080250;
+		fbWriteM1Detect.WRITE			:= TRUE;
+
+		iStepTest 						:= 60;
+		
+60:// ------------------------------------------------------- Begin M1 Detection
+
+	fbDelayM1Timer( IN := TRUE, PT := T#1000MS );
+		
+		IF fbDelayM1Timer.Q THEN
+			fbDelayM1Timer( IN := FALSE );
+			fbWriteM1Detect.WRITE			:= FALSE;
+			iStepTest 						:= 70;
+		END_IF
+
+70:// ------------------------------------------------------- Finished M1 Detection
+
+
+
+END_CASE
+
+
+// Completed Detecting Mover 1
+
+
 
 
 
@@ -466,9 +574,19 @@ END_IF]]></ST>
       </Implementation>
     </Action>
     <LineIds Name="Main">
-      <LineId Id="1" Count="26" />
+      <LineId Id="1" Count="22" />
+      <LineId Id="521" Count="0" />
+      <LineId Id="520" Count="0" />
+      <LineId Id="522" Count="0" />
+      <LineId Id="524" Count="2" />
+      <LineId Id="523" Count="0" />
+      <LineId Id="513" Count="3" />
+      <LineId Id="26" Count="0" />
       <LineId Id="357" Count="0" />
-      <LineId Id="32" Count="6" />
+      <LineId Id="519" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="517" Count="0" />
+      <LineId Id="34" Count="4" />
       <LineId Id="41" Count="0" />
       <LineId Id="43" Count="4" />
       <LineId Id="340" Count="0" />
@@ -509,6 +627,50 @@ END_IF]]></ST>
       <LineId Id="303" Count="3" />
       <LineId Id="415" Count="1" />
       <LineId Id="307" Count="5" />
+      <LineId Id="418" Count="1" />
+      <LineId Id="417" Count="0" />
+      <LineId Id="427" Count="0" />
+      <LineId Id="438" Count="0" />
+      <LineId Id="436" Count="0" />
+      <LineId Id="439" Count="0" />
+      <LineId Id="441" Count="0" />
+      <LineId Id="440" Count="0" />
+      <LineId Id="434" Count="0" />
+      <LineId Id="433" Count="0" />
+      <LineId Id="435" Count="0" />
+      <LineId Id="443" Count="5" />
+      <LineId Id="442" Count="0" />
+      <LineId Id="430" Count="1" />
+      <LineId Id="449" Count="2" />
+      <LineId Id="432" Count="0" />
+      <LineId Id="452" Count="0" />
+      <LineId Id="454" Count="1" />
+      <LineId Id="459" Count="15" />
+      <LineId Id="458" Count="0" />
+      <LineId Id="475" Count="0" />
+      <LineId Id="479" Count="0" />
+      <LineId Id="476" Count="1" />
+      <LineId Id="484" Count="0" />
+      <LineId Id="483" Count="0" />
+      <LineId Id="485" Count="0" />
+      <LineId Id="478" Count="0" />
+      <LineId Id="491" Count="1" />
+      <LineId Id="429" Count="0" />
+      <LineId Id="488" Count="0" />
+      <LineId Id="493" Count="3" />
+      <LineId Id="489" Count="1" />
+      <LineId Id="497" Count="3" />
+      <LineId Id="502" Count="3" />
+      <LineId Id="512" Count="0" />
+      <LineId Id="506" Count="0" />
+      <LineId Id="501" Count="0" />
+      <LineId Id="507" Count="0" />
+      <LineId Id="486" Count="0" />
+      <LineId Id="509" Count="1" />
+      <LineId Id="508" Count="0" />
+      <LineId Id="428" Count="0" />
+      <LineId Id="481" Count="1" />
+      <LineId Id="480" Count="0" />
       <LineId Id="404" Count="0" />
       <LineId Id="413" Count="1" />
       <LineId Id="410" Count="0" />

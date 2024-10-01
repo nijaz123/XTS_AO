@@ -10,6 +10,7 @@ VAR_INPUT
 	toPause			: BOOL;				// Request mover to pause	
 	toDisable		: BOOL;				// Request mover to disable power	
 	toQueue			: BOOL;				// Request current mover at starting station to join the back of the queue
+	toReset			: BOOL;				// Request current mover at starting station to join the back of the queue
 END_VAR
 VAR_OUTPUT
 	Enabled			: BOOL;				// Mover confirmed enabled
@@ -57,6 +58,7 @@ END_VAR
 		toQueue := FALSE;
 	END_IF
 	
+	
 
 	IF toStop OR toPause THEN
 		fbMoveAbsCA.Execute		:= FALSE;
@@ -68,8 +70,29 @@ END_VAR
 			Step := MoverSequence.Pausing;
 		END_IF
 	END_IF
+	
+	IF toReset THEN
+		Step := MoverSequence.Reset;
+		toReset := FALSE;
+	END_IF
 
 CASE Step OF
+	//-----------------------------------------------------------------------------------------------------------------------
+	MoverSequence.Reset:	
+	
+	fbReset.Execute := TRUE;
+	IF fbReset.Busy THEN
+		Step := MoverSequence.Resetting;
+	END_IF
+	
+	//-----------------------------------------------------------------------------------------------------------------------
+	MoverSequence.Resetting:	
+	
+	IF fbReset.Done THEN
+		fbReset.Execute := FALSE;
+		Step := MoverSequence.Waiting;
+	END_IF
+
 	//-----------------------------------------------------------------------------------------------------------------------
 	MoverSequence.MovingToQueue:	
 	
@@ -78,8 +101,6 @@ CASE Step OF
 			fbMoveAbsCA.Position		:= GVL.Station[GVL.startStation].Position+2000;
 			fbMoveAbsCA.Velocity		:= 1000.0;										// parameterize
 			fbMoveAbsCA.Direction		:= MC_Positive_Direction;						// usually positive
-		//ELSE
-			//fbMoveAbsCA.Execute			:= FALSE;
 		END_IF
 		// check for error
 		IF fbMoveAbsCA.Error THEN
@@ -269,6 +290,7 @@ END_CASE
       <LineId Id="421" Count="0" />
       <LineId Id="420" Count="0" />
       <LineId Id="418" Count="0" />
+      <LineId Id="508" Count="0" />
       <LineId Id="164" Count="0" />
       <LineId Id="139" Count="0" />
       <LineId Id="213" Count="1" />
@@ -277,13 +299,30 @@ END_CASE
       <LineId Id="314" Count="0" />
       <LineId Id="502" Count="0" />
       <LineId Id="190" Count="0" />
+      <LineId Id="509" Count="2" />
+      <LineId Id="520" Count="0" />
+      <LineId Id="512" Count="0" />
       <LineId Id="188" Count="0" />
       <LineId Id="7" Count="0" />
+      <LineId Id="513" Count="0" />
+      <LineId Id="515" Count="0" />
+      <LineId Id="517" Count="0" />
+      <LineId Id="525" Count="0" />
+      <LineId Id="528" Count="0" />
+      <LineId Id="524" Count="0" />
+      <LineId Id="521" Count="0" />
+      <LineId Id="532" Count="0" />
+      <LineId Id="522" Count="1" />
+      <LineId Id="526" Count="1" />
+      <LineId Id="529" Count="0" />
+      <LineId Id="531" Count="0" />
+      <LineId Id="530" Count="0" />
+      <LineId Id="514" Count="0" />
       <LineId Id="422" Count="1" />
       <LineId Id="429" Count="0" />
       <LineId Id="431" Count="3" />
       <LineId Id="469" Count="0" />
-      <LineId Id="440" Count="10" />
+      <LineId Id="442" Count="8" />
       <LineId Id="455" Count="0" />
       <LineId Id="474" Count="0" />
       <LineId Id="456" Count="0" />

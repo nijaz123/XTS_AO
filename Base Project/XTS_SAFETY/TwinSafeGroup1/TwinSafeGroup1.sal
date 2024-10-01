@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<safetyApplication Crc="1806972063" xmlns:dm0="http://schemas.microsoft.com/VisualStudio/2008/DslTools/Core" dslVersion="1.5.0.0" Id="e6bb3767-7d10-4d1a-a4ec-b58a8a61b79a" name="" mapState="false" mapDiag="false" groupOrderId="0" passificationAllowed="false" temporaryDeactivationAllowed="false" permamentDeactivationAllowed="false" xmlid="0" analogFBOutputReplacementValues="Zero" verifyAnalogFBInputsIfStart="false" userFbId="00000000-0000-0000-0000-000000000000" xmlns="http://schemas.microsoft.com/dsltools/SafetyApplicationLanguage">
+<safetyApplication Crc="1352680435" xmlns:dm0="http://schemas.microsoft.com/VisualStudio/2008/DslTools/Core" dslVersion="1.5.0.0" Id="e6bb3767-7d10-4d1a-a4ec-b58a8a61b79a" name="" mapState="false" mapDiag="false" groupOrderId="0" passificationAllowed="false" temporaryDeactivationAllowed="false" permamentDeactivationAllowed="false" xmlid="0" analogFBOutputReplacementValues="Zero" verifyAnalogFBInputsIfStart="false" userFbId="00000000-0000-0000-0000-000000000000" xmlns="http://schemas.microsoft.com/dsltools/SafetyApplicationLanguage">
   <networks>
     <safetyApplicationHasNetworks Id="fdec977b-3449-43d4-9a94-fde11657faed">
       <Network Id="472e6540-b5be-43f6-9349-4f14b401f0c6" name="Network1" networkName="Network1" intId="1" networkOrderId="0">
@@ -60,7 +60,7 @@
               </outPorts>
               <parameterPorts>
                 <functionBlockHasParamPorts Id="7fe5e458-c693-4a0e-b4ee-be1039a8ea9d">
-                  <parameterPort Id="99a41f84-2a83-42ce-8f66-119c505e9c3a" name="Delay Time (ms)" portName="Delay Time (ms)" portNum="8" objectIndex="0" varId="0" filter="0" portDataType="0" timing="100" userFbPortName="Delay Time (ms)" useInUserFb="false" />
+                  <parameterPort Id="99a41f84-2a83-42ce-8f66-119c505e9c3a" name="Delay Time (ms)" portName="Delay Time (ms)" portNum="8" objectIndex="0" varId="0" filter="0" portDataType="0" timing="1500" userFbPortName="Delay Time (ms)" useInUserFb="false" />
                 </functionBlockHasParamPorts>
               </parameterPorts>
             </fBEstop>
@@ -669,10 +669,10 @@
           <variableHasSourceUsages Id="51202bf4-6e5c-48e8-a959-8712b6d3c49f">
             <variableUsages Id="894d24d2-3fc7-4cd5-a11b-43b6c967351b">
               <usages>
-                <variableUsagesHasUsages Id="c247e35d-c425-44c2-9e87-fa3ad1645f90">
-                  <fbPortUsage Id="51273f85-ec6c-4278-b884-92b575bada48">
+                <variableUsagesHasUsages Id="a38baa12-8275-45c9-8bb4-316a0f9a7b9a">
+                  <fbPortUsage Id="35dfd0da-fd3b-49a7-a392-c2207b798883">
                     <functionBlockPort>
-                      <fbPortUsageReferencesFunctionBlockPort Id="818d23b5-3d1f-469a-a6c2-88ea1c3d7a61">
+                      <fbPortUsageReferencesFunctionBlockPort Id="da04a239-321c-42ca-8b39-ff74584fb139">
                         <outPortMoniker name="//Network1/FBEstop1/EStopOut" />
                       </fbPortUsageReferencesFunctionBlockPort>
                     </functionBlockPort>
@@ -686,8 +686,8 @@
           <variableHasTargetUsages Id="22a69fd5-3915-4fbd-9d9a-51e04d7ee4c2">
             <variableUsages Id="4463d310-fa63-440e-9efc-49afba34b189">
               <usages>
-                <variableUsagesHasUsages Id="c17e479f-4563-4419-a8c8-ca198edccb82">
-                  <aliasDeviceIoUsage Id="7f4faa0f-a108-4e26-82a7-b1d5fd6b992f" sdsId="7" channelId="1" functionId="1879113985" />
+                <variableUsagesHasUsages Id="dedc9631-5fe4-4ac6-8dda-4ce00865978c">
+                  <aliasDeviceIoUsage Id="325cf3f7-a474-4c74-b467-fb1c64513293" sdsId="15" channelId="1" functionId="1131179972" />
                 </variableUsagesHasUsages>
               </usages>
             </variableUsages>
@@ -1076,6 +1076,38 @@
                       </fbPortUsageReferencesFunctionBlockPort>
                     </functionBlockPort>
                   </fbPortUsage>
+                </variableUsagesHasUsages>
+              </usages>
+            </variableUsages>
+          </variableHasTargetUsages>
+        </targetUsages>
+      </variable>
+    </safetyApplicationHasVariables>
+    <safetyApplicationHasVariables Id="35789d4c-5dd1-4319-a7da-4910e68436c2">
+      <variable Id="b4822a25-a5a1-45d0-b9b1-2c94136d2cc5" name="EStopOKDelayed" isLocal="false">
+        <sourceUsages>
+          <variableHasSourceUsages Id="9464e992-556a-4a62-a785-e25060a6d161">
+            <variableUsages Id="3da510f6-e595-4211-8923-1e884eecb4d0">
+              <usages>
+                <variableUsagesHasUsages Id="34a6adef-39a9-4372-a0f3-a934723aaff0">
+                  <fbPortUsage Id="a61244b7-99a0-4004-bf16-2e3d16356155">
+                    <functionBlockPort>
+                      <fbPortUsageReferencesFunctionBlockPort Id="d32e2248-edac-486b-8d9e-257e9e1d159a">
+                        <outPortMoniker name="//Network1/FBEstop1/EStopDelOut" />
+                      </fbPortUsageReferencesFunctionBlockPort>
+                    </functionBlockPort>
+                  </fbPortUsage>
+                </variableUsagesHasUsages>
+              </usages>
+            </variableUsages>
+          </variableHasSourceUsages>
+        </sourceUsages>
+        <targetUsages>
+          <variableHasTargetUsages Id="98357130-3b5b-491c-9d4b-a0ad7fc3bdc0">
+            <variableUsages Id="3c622a30-6711-40d6-b624-7cc59d90d07f">
+              <usages>
+                <variableUsagesHasUsages Id="c2a5d734-d714-4c54-93ec-79ca3c4cd1b1">
+                  <aliasDeviceIoUsage Id="c1a68178-0195-447e-8ebc-9347efa7c841" sdsId="7" channelId="1" functionId="1879113985" />
                 </variableUsagesHasUsages>
               </usages>
             </variableUsages>

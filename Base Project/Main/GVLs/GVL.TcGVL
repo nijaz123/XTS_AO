@@ -4,18 +4,20 @@
     <Declaration><![CDATA[{attribute 'qualified_only'}
 VAR_GLOBAL CONSTANT
 
-	TRACK_LENGTH 			: LREAL := 7000; // This should be set to the exact length [mm] of the track system
-	NUM_MOVERS   			: USINT := 20;   // This should be set to the exact number of movers on the system
+    pXtsProcessingUnit : OTCID	:=	01010090;	 
+
+	TRACK_LENGTH 				: LREAL := 7000; // This should be set to the exact length [mm] of the track system
+	NUM_MOVERS   				: USINT := 20;   // This should be set to the exact number of movers on the system
 	
 	// The following should be set to a value **equal to or greater than** the number of objectives needed
-	NUM_POSITIONTRIGGERS	: USINT := 10;	// Position Triggers
-	NUM_STATIONS			: USINT := 8;	// Stations
-	NUM_ZONES				: USINT := 10;	// Zones
+	NUM_POSITIONTRIGGERS		: USINT := 10;	// Position Triggers
+	NUM_STATIONS				: USINT := 8;	// Stations
+	NUM_ZONES					: USINT := 10;	// Zones
 
 	// Station constants
-	startStation		: USINT	:= 1;		// set this number to the index of the station all movers should start from
-	stationTolerance	: LREAL	:= 0.5;		// set to number of millimeters tolerance for mover at station
-	zeroSpeed			: lreal	:= 10.0;		// tolerance for definition of not moving
+	startStation				: USINT	:= 1;		// set this number to the index of the station all movers should start from
+	stationTolerance			: LREAL	:= 0.5;		// set to number of millimeters tolerance for mover at station
+	zeroSpeed					: LREAL	:= 10.0;		// tolerance for definition of not moving
 
 END_VAR
 VAR_GLOBAL

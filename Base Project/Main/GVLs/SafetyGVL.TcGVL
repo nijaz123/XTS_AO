@@ -13,6 +13,7 @@ ResetCurtains	AT %Q*	:	BOOL;
 //INPUTS FROM SAFETY GROUP
 CurtainsOK		AT %I*	:	BOOL;
 AllSafetyOK		AT %I*	:	BOOL;
+EStopStatus		AT %I*	:	BOOL;
 
 
 END_VAR]]></Declaration>
