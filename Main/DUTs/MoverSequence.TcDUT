@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.8">
+  <DUT Name="MoverSequence" Id="{222d4c05-bf8f-04c2-2b5f-d5019a5c0421}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+TYPE MoverSequence :
+(
+	Off,
+	Idle,
+	MovingToStart,
+	AtStart,
+	MovingToStation,
+	AtStation,
+	MovingToQueue,
+	AtQueue,
+	Error,
+	Stop,
+	Stopping,
+	RemoveAxes,
+	RemovingAxes,
+	Pausing,
+	Paused,
+	Disabling,
+	Disabled,
+	Reset,
+	Resetting,
+	Waiting	
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

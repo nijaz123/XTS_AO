@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.8">
+  <DUT Name="StationSequence" Id="{1902de7b-9844-06dc-0f39-280193ecc01b}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+TYPE StationSequence :
+(
+	Idle,
+	MoverPresent,
+	RobotActive,
+	DischargeMover,
+	Error		
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

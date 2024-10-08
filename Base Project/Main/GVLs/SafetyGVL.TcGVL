@@ -15,7 +15,6 @@ CurtainsOK		AT %I*	:	BOOL;
 AllSafetyOK		AT %I*	:	BOOL;
 EStopStatus		AT %I*	:	BOOL;
 
-
 END_VAR]]></Declaration>
   </GVL>
 </TcPlcObject>

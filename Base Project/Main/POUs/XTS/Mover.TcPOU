@@ -31,7 +31,7 @@ VAR
 	fbMoveAbsCA				: MC_MoveAbsoluteCA;
 	fbMoveAbsCABlended		: MC_MoveAbsoluteCA;
 	
-	bDummy					: BOOL;
+	MoveCommandVel			: LREAL := 400;
 	PosLow					: LREAL;
 	PosHigh					: LREAL;
 	
@@ -99,7 +99,7 @@ CASE Step OF
 	IF NOT fbMoveAbsCA.Busy AND NOT fbMoveAbsCA.Done THEN			//Add additional condition that the doors are not unlcoked
 			fbMoveAbsCA.Execute			:= TRUE;
 			fbMoveAbsCA.Position		:= GVL.Station[GVL.startStation].Position+2000;
-			fbMoveAbsCA.Velocity		:= 1000.0;										// parameterize
+			fbMoveAbsCA.Velocity		:= MoveCommandVel;										// parameterize
 			fbMoveAbsCA.Direction		:= MC_Positive_Direction;						// usually positive
 		END_IF
 		// check for error
@@ -113,7 +113,7 @@ CASE Step OF
 			fbMoveAbsCABlended.Execute		:= TRUE;
 			//bDummy							:= TRUE;
 			fbMoveAbsCABlended.Position		:= GVL.Station[GVL.startStation].Position;
-			fbMoveAbsCABlended.Velocity		:= 1000.0;
+			fbMoveAbsCABlended.Velocity		:= MoveCommandVel;
 			fbMoveAbsCABlended.BufferMode	:= mcAborting;
 			fbMoveAbsCABlended.Direction 	:= MC_Positive_Direction;
 			Step							:= MoverSequence.AtQueue;
@@ -196,7 +196,7 @@ CASE Step OF
 		IF NOT fbMoveAbsCA.Busy AND NOT fbMoveAbsCA.Done THEN			//Add additional condition that the doors are not unlcoked
 			fbMoveAbsCA.Execute			:= TRUE;
 			fbMoveAbsCA.Position		:= GVL.Station[GVL.startStation].Position;
-			fbMoveAbsCA.Velocity		:= 1000.0;										// parameterize
+			fbMoveAbsCA.Velocity		:= MoveCommandVel;										// parameterize
 			fbMoveAbsCA.Direction		:= MC_Positive_Direction;						// usually positive
 		ELSE
 			fbMoveAbsCA.Execute			:= FALSE;
@@ -208,7 +208,7 @@ CASE Step OF
 			fbMoveAbsCA.Execute	:= FALSE;
 		END_IF
 		// check for move complete
-		IF fbMoveAbsCA.Done THEN
+		IF fbMoveAbsCA.Done OR (Position > -3 AND Position < 3) THEN
 			fbMoveAbsCA.Execute	:= FALSE;
 			toStart				:= FALSE;
 			Step				:= MoverSequence.AtStart;
@@ -233,7 +233,7 @@ CASE Step OF
 		// move absolute with collision avoidance to next station		//Add additional condition that the doors are not unlcoked
 		fbMoveAbsCA.Execute			:= TRUE;
 				fbMoveAbsCA.Position		:= GVL.Station[TargetStation].Position;
-				fbMoveAbsCA.Velocity		:= 1000.0;										// parameterize
+				fbMoveAbsCA.Velocity		:= MoveCommandVel;										// parameterize
 				fbMoveAbsCA.Direction		:= MC_Positive_Direction;						// usually positive
 		// check for error
 		IF fbMoveAbsCA.Error THEN

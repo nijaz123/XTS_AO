@@ -1,0 +1,731 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.8">
+  <POU Name="Main" Id="{99d93c32-af77-0b47-2160-e8a9eed47eae}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Main
+VAR
+	PowerOn					: BOOL	:= TRUE;	// initialize on, turn false on second scan
+	FirstRun				: BOOL	:= TRUE;		// initialize on, turn false when system has reached starting postion 
+	i						: UINT;								// loop index variable
+	Step					: XTSSequence;						// primary sequencer
+	stCaGroupRef			: AXES_GROUP_REF;
+	fbEnableGroup			: MC_GroupEnable;
+	fbAddAxis				: ARRAY[1..GVL.NUM_MOVERS] OF MC_AddAxisToGroup;
+	fbRemoveAxisFromGroup	: ARRAY[1..GVL.NUM_MOVERS] OF MC_RemoveAxisFromGroup;
+	nAtStart				: UINT;
+	nToStart				: UINT;
+	allMoversHalted			: BOOL;	
+	MoversReady				: BOOL;
+	Started					: BOOL;		
+	Resumed					: BOOL;
+	bLightCurtainExited		: R_TRIG;
+	bLightCurtainEntered	: F_TRIG;
+	bEstopPressed			: F_TRIG;
+	safeToOpenDoors			: BOOL;
+	allMoversNotMoving		: BOOL;
+	DelayMoversTimer		: TON;
+	
+	//Timers for generating a pulse
+	PulseTON	: TON;
+	PulseTOF	: TOF;
+	OnDuration	: TIME := T#500MS;
+	OFFDuration	: TIME := T#1000MS;
+	bCycleBit	: BOOL;
+	
+	//M1 Detection
+	fbReadM1DetectMode		: ADSREAD;
+	fbReadM1DetectValid		: ADSREAD;
+	fbReadM1DetectActive	: ADSREAD;
+	fbWriteM1Detect			: ADSWRITE;
+	fbDelayM1Timer			: TON;
+	IsIdDetectionActive		: BOOL;			// M1 Detection currently underway
+	Mover1Found				: BOOL;			// M1 Detection has completed
+	Mover1Error				: BOOL;			// M1 Detection has Failed
+	M1DetectStep			: M1Detection;	
+	M1DetectAttemptCounter	: INT;
+	
+	iDummyLightCurtainTest	: INT;
+	bDummyLightCurtainTest	: BOOL;
+	bOperatorLoadingTrays	: BOOL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* this program handles the main sequencer of this machine *)
+
+// cyclic call to execute fb's for movers, stations, and zones
+FOR i := 1 TO GVL.NUM_MOVERS DO
+	GVL.Mover[i]();
+	GVL.Mover[i].AxisReference.ReadStatus();
+	fbRemoveAxisFromGroup[i](AxesGroup		:= stCaGroupRef);
+	fbAddAxis[i](AxesGroup		:= stCaGroupRef,
+				Axis			:= GVL.Mover[i].AxisReference);
+	//Monitoring if all movers are in stopped motion state			
+	IF GVL.Mover[i].AxisReference.Status.Moving THEN
+		allMoversNotMoving	:= FALSE;
+	ELSE
+		allMoversNotMoving	:= TRUE;
+	END_IF
+	
+END_FOR
+FOR i := 1 TO GVL.NUM_STATIONS DO
+	GVL.Station[i]();
+END_FOR
+FOR i := 1 TO gvl.NUM_ZONES DO
+	GVL.Zone[i]();
+END_FOR
+
+IF HMI.ResetXTS_Error THEN
+	FOR i := 1 TO GVL.NUM_MOVERS DO
+		GVL.Mover[i].toReset := TRUE;
+	END_FOR
+	HMI.ResetXTS_Error := FALSE;
+END_IF
+
+
+// check for E-STOP
+bEstopPressed(CLK:=SafetyGVL.EStopStatus);
+IF bEstopPressed.Q OR HMI.E_Stop THEN
+	Step			:= XTSSequence.Stop;
+	HMI.E_Stop := FALSE;
+END_IF
+
+CASE Step OF
+
+//-----------------------------------------------------------------------------------------------------------------------	
+	XTSSequence.Off:
+		IF SafetyGVL.EStopStatus AND IOGVL.iPowerSupply48VDC1 AND IOGVL.iPowerSupply48VDC2 AND IOGVL.iPowerSupply48VDC3 AND Mover1Found = FALSE THEN
+			Initialize();
+		END_IF
+		// state waiting for HMI.Start
+		IF HMI.Start AND Mover1Found THEN
+			Step		:= XTSSequence.EnableMovers;
+			Started 	:= TRUE;
+			HMI.Start 	:= FALSE;
+		END_IF
+
+//-----------------------------------------------------------------------------------------------------------------------	
+	XTSSequence.Paused:
+		//state waiting for HMI.Start or HMI.Resume
+		IF HMI.Start THEN
+			Step		:= XTSSequence.EnableMovers;
+			Started 	:= TRUE;
+			HMI.Start 	:= FALSE;
+		END_IF
+	
+		IF HMI.Resume THEN
+			Step		:= XTSSequence.EnableMovers;
+			Resumed 	:= TRUE;
+			HMI.Resume 	:= FALSE;
+			HMI.Stop  	:= FALSE;
+		END_IF
+	
+//-----------------------------------------------------------------------------------------------------------------------	
+	XTSSequence.Stop:
+	
+	FOR i := 1 TO GVL.NUM_MOVERS  DO
+		GVL.Mover[i].toStop := TRUE;
+	END_FOR
+	
+	Started 	:= FALSE;
+	Resumed 	:= FALSE;
+	Step		:= XTSSequence.Stopping;
+		
+//-----------------------------------------------------------------------------------------------------------------------	
+	XTSSequence.Stopping:
+		// Waiting for all to come to a full stop
+		
+	allMoversHalted		:= TRUE;
+	
+		FOR i := 1 TO GVL.NUM_MOVERS DO
+			IF GVL.Mover[i].AxisReference.Status.Moving THEN
+				allMoversHalted		:= FALSE;
+			END_IF
+		END_FOR
+	
+	IF allMoversHalted THEN
+		Step		:= XTSSequence.RemoveAxes;
+	END_IF
+	
+//-----------------------------------------------------------------------------------------------------------------------	
+	XTSSequence.RemoveAxes:
+		// remove all axes to collision avoidance group
+		// loop through each mover axis and remove CA group
+		FOR i:= 1 TO GVL.NUM_MOVERS DO
+			fbRemoveAxisFromGroup[i].IdentInGroup := UDINT_TO_IDENTINGROUP(UINT_TO_UDINT(i));
+			fbRemoveAxisFromGroup[i].Execute			:= TRUE;
+		END_FOR
+	
+		IF stCaGroupRef.NcToPlc.CA.Common.GroupAxesCount = 0 THEN
+			FOR i:= 1 TO GVL.NUM_MOVERS DO
+				fbRemoveAxisFromGroup[i].IdentInGroup	:= UDINT_TO_IDENTINGROUP(UINT_TO_UDINT(i));
+				fbRemoveAxisFromGroup[i].Execute			:= FALSE;
+				MoversReady := FALSE;
+		END_FOR
+			Mover1Found := FALSE;
+			Step := XTSSequence.DisableMovers;
+		END_IF
+
+//-----------------------------------------------------------------------------------------------------------------------	
+	XTSSequence.DisableMovers:
+	FOR i := 1 TO GVL.NUM_MOVERS  DO
+		GVL.Mover[i].toDisable := TRUE;
+	END_FOR
+	
+	Step := XTSSequence.Off;
+		
+//-----------------------------------------------------------------------------------------------------------------------			
+	XTSSequence.EnableMovers:
+		// enable all movers
+		FOR i := 1 TO GVL.NUM_MOVERS DO
+			IF NOT GVL.Mover[i].Enabled THEN
+				GVL.Mover[i].Enable	:= TRUE;
+			END_IF
+		END_FOR
+		
+		// check for all enabled
+		FOR i := 1 TO GVL.NUM_MOVERS DO
+			IF NOT GVL.Mover[i].Enabled THEN
+				// not enabled, leave for loop
+				EXIT;
+			END_IF
+			// made it this far, all movers are enabled
+			IF i = gvl.NUM_MOVERS THEN
+				Step	:= XTSSequence.EnableGroup;
+			END_IF
+		END_FOR
+		
+//-----------------------------------------------------------------------------------------------------------------------		
+	XTSSequence.EnableGroup:
+	// enable CA group
+	fbEnableGroup.Execute := TRUE;
+	// verify group enabled successfully
+	IF fbEnableGroup.Done = TRUE THEN
+		fbEnableGroup.Execute := FALSE;
+		Step := XTSSequence.AddAxes;
+	END_IF
+		
+//-----------------------------------------------------------------------------------------------------------------------		
+	XTSSequence.AddAxes:
+		// add all axes to collision avoidance group
+		// loop through each mover axis and add to CA group
+	FOR i:= 1 TO GVL.NUM_MOVERS DO
+		fbAddAxis[i].IdentInGroup := UDINT_TO_IDENTINGROUP(UINT_TO_UDINT(i));
+		fbAddAxis[i].Execute := TRUE;
+	END_FOR
+	
+	// verify all axes added
+	IF stCaGroupRef.NcToPlc.CA.Common.GroupAxesCount = GVL.NUM_MOVERS THEN
+		FOR i:= 1 TO GVL.NUM_MOVERS DO
+			fbAddAxis[i].IdentInGroup := UDINT_TO_IDENTINGROUP(UINT_TO_UDINT(i));
+			fbAddAxis[i].Execute := FALSE;
+			Step	:= XTSSequence.StandBy;
+		END_FOR
+	END_IF
+		
+//-----------------------------------------------------------------------------------------------------------------------		
+	XTSSequence.StandBy:
+	IF Started THEN
+		// first time code executes this far (after power on) move to a start position
+		Started := FALSE;
+		Step	:= XTSSequence.Start;
+	ELSIF Resumed THEN
+		// any other time code executes here, resume operation where movers left off
+		Resumed := FALSE;
+		Step	:= XTSSequence.Run;
+	END_IF
+
+//-----------------------------------------------------------------------------------------------------------------------		
+	XTSSequence.Start:
+		// request all movers proceed to starting station
+IF bOperatorLoadingTrays = FALSE THEN
+	FOR i:= 1 TO GVL.NUM_MOVERS DO
+		GVL.Mover[i].toStart	:= TRUE;
+		iDummyLightCurtainTest := iDummyLightCurtainTest + 1;
+	END_FOR
+	// verify one mover is at start, all others have commands and are at zero speed
+	nAtStart	:= 0;
+	nToStart	:= 0;
+	FOR i:= 1 TO GVL.NUM_MOVERS DO
+		IF GVL.Mover[i].Step = MoverSequence.AtStart THEN
+			nAtStart	:= nAtStart + 1;
+		ELSIF GVL.Mover[i].Step = MoverSequence.MovingToStart THEN
+			nToStart	:= nToStart + 1;
+		END_IF
+	END_FOR
+	IF nAtStart = 1 AND nToStart = GVL.NUM_MOVERS - 1 THEN
+		Step	:= XTSSequence.Run;
+	END_IF
+END_IF	
+//-----------------------------------------------------------------------------------------------------------------------	
+	XTSSequence.Run:
+
+IF HMI.Stop = FALSE THEN
+	
+	// LOAD TRAY STATION
+	IF GVL.Station[1].Step = StationSequence.MoverPresent THEN
+		HMI.dsMoverControlFlags.loadTray_Busy := TRUE;
+		IF HMI.dsMoverControlFlags.loadTray_Complete THEN			//IF SENSOR IS TRUE PACKAGE IS PRESENT MOVER GOES TO NEXT STATION
+			HMI.dsMoverControlFlags.loadTray_Complete := FALSE;
+			GVL.Station[1].bMoveToNext := TRUE;
+		END_IF
+	ELSE
+		HMI.dsMoverControlFlags.loadTray_Busy := FALSE;
+	END_IF
+	
+	// INSPECT TRAY STATION
+	IF GVL.Station[2].Step = StationSequence.MoverPresent THEN
+		HMI.dsMoverControlFlags.inspectTray_Busy := TRUE;
+		IF HMI.dsMoverControlFlags.inspectTray_Complate THEN			//IF SENSOR IS TRUE PACKAGE IS PRESENT MOVER GOES TO NEXT STATION
+			HMI.dsMoverControlFlags.inspectTray_Complate := FALSE;
+			GVL.Station[2].bMoveToNext := TRUE;
+		END_IF
+	ELSE
+		HMI.dsMoverControlFlags.inspectTray_Busy := FALSE;
+	END_IF
+	
+	// LOAD PARTS STATION 1
+	IF GVL.Station[3].Step = StationSequence.MoverPresent THEN
+		HMI.dsMoverControlFlags.loadArea1_Busy := TRUE;				//SIGNAL TO ROBOT 1 TO LOAD PARTS
+		IF HMI.dsMoverControlFlags.loadArea1_Complete THEN			//SIGNAL FROM ROBOT 1 PARTS COMPLETED
+			HMI.dsMoverControlFlags.loadArea1_Complete := FALSE;
+			GVL.Station[3].bMoveToNext := TRUE;
+		END_IF
+	ELSE 
+		HMI.dsMoverControlFlags.loadArea1_Busy := FALSE;
+	END_IF
+	
+	// LOAD PARTS STATION 2
+	IF GVL.Station[4].Step = StationSequence.MoverPresent THEN
+		HMI.dsMoverControlFlags.loadArea2_Busy := TRUE;				//SIGNAL TO ROBOT 2 TO LOAD PARTS
+		IF HMI.dsMoverControlFlags.loadArea2_Complete THEN			//SIGNAL FROM ROBOT 2 PARTS COMPLETED
+			HMI.dsMoverControlFlags.loadArea2_Complete := FALSE;
+			GVL.Station[4].bMoveToNext := TRUE;
+		END_IF
+	ELSE
+		HMI.dsMoverControlFlags.loadArea2_Busy := FALSE;	
+	END_IF
+	
+	// LOAD PARTS STATION 3
+	IF GVL.Station[5].Step = StationSequence.MoverPresent THEN
+		HMI.dsMoverControlFlags.loadArea3_Busy := TRUE;				//SIGNAL TO ROBOT 3 TO LOAD PARTS
+		IF HMI.dsMoverControlFlags.loadArea3_Complete THEN			//SIGNAL FROM ROBOT 3 PARTS COMPLETED
+			HMI.dsMoverControlFlags.loadArea3_Complete := FALSE;
+			GVL.Station[5].bMoveToNext := TRUE;
+		END_IF
+	ELSE
+		HMI.dsMoverControlFlags.loadArea3_Busy := FALSE;
+	END_IF
+
+	// LOAD PARTS STATION 4
+	IF GVL.Station[6].Step = StationSequence.MoverPresent THEN
+		HMI.dsMoverControlFlags.loadArea4_Busy := TRUE;				//SIGNAL TO ROBOT 4 TO LOAD PARTS
+		IF HMI.dsMoverControlFlags.loadArea4_Complete THEN			//SIGNAL FROM ROBOT 4 PARTS COMPLETED
+			HMI.dsMoverControlFlags.loadArea4_Complete := FALSE;
+			GVL.Station[6].bMoveToNext := TRUE;
+		END_IF
+	ELSE
+		HMI.dsMoverControlFlags.loadArea4_Busy := FALSE;	
+	END_IF
+	
+	// UNLOAD PARTS STATION 
+	IF GVL.Station[7].Step = StationSequence.MoverPresent THEN
+		HMI.dsMoverControlFlags.unloadTray_Busy := TRUE;			//SIGNAL TO ROBOT 5 TO UNLOAD TRAY
+		IF HMI.dsMoverControlFlags.unloadTray_Complete THEN			//SIGNAL FROM ROBOT 5 UNLOAD TRAY COMPLETED
+			HMI.dsMoverControlFlags.unloadTray_Complete := FALSE;
+			IF bOperatorLoadingTrays THEN
+				GVL.Station[7].bMoveToNext := TRUE;					//Send to Queue Movers Station
+			ELSE
+				GVL.Station[7].bMoveToStart := TRUE;				//Send to Load Tray Station
+			END_IF
+
+		END_IF
+	ELSE
+		HMI.dsMoverControlFlags.unloadTray_Busy := FALSE;
+	END_IF
+	
+	// Queue Station used only if Operator is in Zone 1
+	IF GVL.Station[8].Step = StationSequence.MoverPresent THEN
+		IF bOperatorLoadingTrays = FALSE THEN			
+			GVL.Station[8].bMoveToStart := TRUE;
+		END_IF
+	END_IF
+	
+	// Starting over on the condition that movers are stationary and HMI.Startover has been pressed.
+	IF allMoversNotMoving THEN				
+		IF HMI.Start THEN
+			FOR i := 2 TO GVL.NUM_STATIONS DO
+				IF GVL.Station[i].Step = StationSequence.MoverPresent THEN
+				GVL.Station[i].bMoveToStart := TRUE;
+				END_IF
+			END_FOR	
+			HMI.Start := FALSE;
+		END_IF
+	END_IF
+ELSE
+	Step	:= XTSSequence.Paused;
+END_IF
+
+END_CASE
+
+fbEnableGroup(AxesGroup	:= stCaGroupRef);
+LightCurtainCheck();
+ShuttleMoverToQueue();
+DoorsClosedMonitor();
+
+IF allMoversNotMoving THEN
+	HMI.SafeToUnlock := TRUE;
+ELSE
+	HMI.SafeToUnlock := FALSE;
+END_IF
+
+
+
+
+
+
+
+]]></ST>
+    </Implementation>
+    <Action Name="DoorsClosedMonitor" Id="{d8e81158-2355-0cf6-0b0a-31222736279d}">
+      <Implementation>
+        <ST><![CDATA[
+
+
+
+
+IF IOGVL.iDoor1Opened OR IOGVL.iDoor2Opened OR IOGVL.iDoor3Opened OR IOGVL.iDoor4Opened THEN
+	SafetyGVL.DoorsClosed := FALSE;
+ELSE
+	SafetyGVL.DoorsClosed := TRUE;
+END_IF
+
+
+PulseTON(IN := NOT SafetyGVL.AllSafetyOK AND NOT bCycleBit, PT := OnDuration);
+PulseTOF(IN := bCycleBit, PT := OFFDuration);
+
+IF PulseTON.Q THEN
+	bCycleBit := TRUE;
+	IOGVL.oEStopLight := TRUE;
+ELSE 
+	IOGVL.oEStopLight := FALSE;
+END_IF
+
+IF PulseTOF.Q THEN
+	bCycleBit := FALSE;
+END_IF
+
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Method Name="Initialize" Id="{4ea4d127-ec11-0953-31c9-c3462af2cac5}">
+      <Declaration><![CDATA[METHOD Initialize : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// set values of function blocks
+	GVL.Station[1].Position		:= 15.67;				//	Load Tray
+	GVL.Station[2].Position		:= 751.07;			//	Inspect Tray
+	GVL.Station[3].Position		:= 1573.61;			//	Load Parts 1
+	GVL.Station[4].Position		:= 2195.49;			//	Load Parts 2
+	GVL.Station[5].Position		:= 2811.86;			//	Load Parts 3
+	GVL.Station[6].Position		:= 3434.98;			//	Load Parts 4
+	GVL.Station[7].Position		:= 4253.05;			//	Unload Tray
+	GVL.Station[8].Position		:= 4667.05;			//	Queue Area if operator is in workspace
+	
+	CASE M1DetectStep OF		//This Case statement will make 10 attempts to find Mover1 and error if not successful
+		
+M1Detection.Read:// ------------------------------------------------------- Determine current M1 Detection Status
+		
+	fbWriteM1Detect.WRITE			:= FALSE;
+	
+	fbReadM1DetectValid.NETID		:= '';
+	fbReadM1DetectValid.PORT		:= 351;
+	fbReadM1DetectValid.IDXGRP		:= GVL.pXtsProcessingUnit;
+	fbReadM1DetectValid.IDXOFFS		:= 16#03080251;
+	fbReadM1DetectValid.LEN			:= SIZEOF( Mover1Found );
+	fbReadM1DetectValid.DESTADDR	:= ADR( Mover1Found );
+	fbReadM1DetectValid.READ		:= TRUE;
+	
+	fbReadM1DetectActive.NETID		:= '';
+	fbReadM1DetectActive.PORT		:= 351;
+	fbReadM1DetectActive.IDXGRP		:= GVL.pXtsProcessingUnit;
+	fbReadM1DetectActive.IDXOFFS	:= 16#03080268;
+	fbReadM1DetectActive.LEN		:= SIZEOF( IsIdDetectionActive );
+	fbReadM1DetectActive.DESTADDR	:= ADR( IsIdDetectionActive );
+	fbReadM1DetectActive.READ		:= TRUE;
+	
+	M1DetectStep 					:= M1Detection.ReadBuffer;
+		
+M1Detection.ReadBuffer:// ------------------------------------------------------- Buffer
+
+	fbDelayM1Timer( IN := TRUE, PT := T#3000MS );
+	IF fbDelayM1Timer.Q THEN
+		fbDelayM1Timer.IN				:= FALSE;
+		fbReadM1DetectValid.READ		:= FALSE;
+		fbReadM1DetectActive.READ		:= FALSE;
+		M1DetectAttemptCounter := M1DetectAttemptCounter + 1;
+		M1DetectStep 			:= M1Detection.Analyze;
+	END_IF
+		
+M1Detection.Analyze:// ------------------------------------------------------- Determine to activate M1 Detect or ignore
+	
+IF M1DetectAttemptCounter < 10 THEN
+	IF IsIdDetectionActive THEN
+		M1DetectStep					:= M1Detection.Read;
+	ELSIF Mover1Found THEN
+		M1DetectStep					:= M1Detection.Done;	// M1 Detection complete, ready to enable this mover
+	ELSE
+		M1DetectStep					:= M1Detection.Write;	// M1 Detection hasn't been started yet. So start it!	
+	END_IF
+ELSE
+	M1DetectStep				:= M1Detection.Error;	// M1 Detection Failed
+END_IF
+
+M1Detection.Write:// ------------------------------------------------------- Begin M1 Detection
+
+	fbWriteM1Detect.NETID			:= '';
+	fbWriteM1Detect.PORT			:= 351;
+	fbWriteM1Detect.IDXGRP			:= GVL.pXtsProcessingUnit;
+	fbWriteM1Detect.IDXOFFS			:= 16#03080250;
+	fbWriteM1Detect.WRITE			:= TRUE;
+
+	M1DetectStep 					:= M1Detection.WriteBuffer;
+		
+M1Detection.WriteBuffer:// ------------------------------------------------------- Buffer
+
+	fbDelayM1Timer( IN := TRUE, PT := T#2000MS );
+		
+	IF fbDelayM1Timer.Q THEN
+		fbDelayM1Timer.IN				:= FALSE;
+		fbWriteM1Detect.WRITE			:= FALSE;
+		M1DetectStep 					:= M1Detection.Read;
+	END_IF
+
+M1Detection.Done:// ------------------------------------------------------- Finished M1 Detection
+
+	Mover1Found := TRUE;
+	IsIdDetectionActive := FALSE;
+	M1DetectStep 					:= M1Detection.Read;
+
+M1Detection.Error:// ------------------------------------------------------- Failed M1 Detection
+
+	Mover1Error			:= TRUE;
+	IsIdDetectionActive := FALSE;
+
+END_CASE
+
+fbReadM1DetectValid();
+fbReadM1DetectActive();
+fbWriteM1Detect();
+fbDelayM1Timer();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Action Name="LightCurtainCheck" Id="{c8440321-cf39-0d36-2897-bf963226c8e3}">
+      <Implementation>
+        <ST><![CDATA[// ZONE 0  OPERATER LOADING
+
+//IF SafetyGVL.AllSafetyOK AND allMoversNotMoving = FALSE THEN
+IF SafetyGVL.AllSafetyOK THEN
+	bLightCurtainEntered(CLK:=SafetyGVL.CurtainsOK);
+	bLightCurtainExited(CLK:=SafetyGVL.CurtainsOK);
+		IF bLightCurtainEntered.Q THEN
+			FOR i:= 1 TO GVL.NUM_MOVERS DO	
+				IF GVL.Mover[i].Position > 4500.0 THEN
+				GVL.Mover[i].toPause	:= TRUE;
+				GVL.Mover[i].toNext		:= FALSE;
+				GVL.Mover[i].toStart	:= FALSE;
+				END_IF
+			END_FOR
+		ELSIF DelayMoversTimer.Q THEN
+			FOR i:= 1 TO GVL.NUM_MOVERS DO	
+				IF GVL.Mover[i].Position > 4500.0 THEN
+					GVL.Mover[i].toStart	:= TRUE;
+				END_IF
+			END_FOR
+			DelayMoversTimer.IN := FALSE;
+		END_IF
+		
+		IF bLightCurtainExited.Q THEN
+			DelayMoversTimer( IN := TRUE, PT := T#2000MS );
+		END_IF
+	
+		bLightCurtainEntered();
+		bLightCurtainExited();
+		DelayMoversTimer();
+		
+END_IF
+	
+IF SafetyGVL.CurtainsOK THEN
+	bOperatorLoadingTrays := FALSE;
+ELSE
+	bOperatorLoadingTrays := TRUE;
+END_IF
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="ShuttleMoverToQueue" Id="{1ea195c0-e199-0839-0126-992a39ca089e}">
+      <Implementation>
+        <ST><![CDATA[
+// This will be used for set up if mover is needed to be re-circulated around track
+
+IF 	GVL.Station[1].Step = StationSequence.MoverPresent AND 
+	GVL.Station[2].Step = StationSequence.Idle AND 
+	GVL.Station[3].Step = StationSequence.Idle AND 
+	GVL.Station[4].Step = StationSequence.Idle AND 
+	GVL.Station[5].Step = StationSequence.Idle AND 
+	GVL.Station[6].Step = StationSequence.Idle AND 
+	GVL.Station[7].Step = StationSequence.Idle AND 
+	HMI.ShuttleMover THEN
+		GVL.Station[1].bMoveToQueue := TRUE;
+		HMI.ShuttleMover := FALSE;
+		
+END_IF]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="Main">
+      <LineId Id="1" Count="22" />
+      <LineId Id="521" Count="0" />
+      <LineId Id="520" Count="0" />
+      <LineId Id="522" Count="0" />
+      <LineId Id="524" Count="2" />
+      <LineId Id="523" Count="0" />
+      <LineId Id="513" Count="3" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="357" Count="0" />
+      <LineId Id="519" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="517" Count="0" />
+      <LineId Id="34" Count="3" />
+      <LineId Id="651" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="652" Count="1" />
+      <LineId Id="43" Count="4" />
+      <LineId Id="340" Count="0" />
+      <LineId Id="377" Count="0" />
+      <LineId Id="375" Count="0" />
+      <LineId Id="386" Count="0" />
+      <LineId Id="388" Count="3" />
+      <LineId Id="387" Count="0" />
+      <LineId Id="378" Count="0" />
+      <LineId Id="381" Count="4" />
+      <LineId Id="380" Count="0" />
+      <LineId Id="379" Count="0" />
+      <LineId Id="74" Count="41" />
+      <LineId Id="654" Count="0" />
+      <LineId Id="116" Count="77" />
+      <LineId Id="659" Count="0" />
+      <LineId Id="194" Count="16" />
+      <LineId Id="374" Count="0" />
+      <LineId Id="360" Count="1" />
+      <LineId Id="217" Count="9" />
+      <LineId Id="318" Count="0" />
+      <LineId Id="320" Count="8" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="227" Count="66" />
+      <LineId Id="397" Count="0" />
+      <LineId Id="333" Count="0" />
+      <LineId Id="329" Count="0" />
+      <LineId Id="295" Count="0" />
+      <LineId Id="315" Count="0" />
+      <LineId Id="331" Count="0" />
+      <LineId Id="316" Count="0" />
+      <LineId Id="332" Count="0" />
+      <LineId Id="298" Count="0" />
+      <LineId Id="317" Count="0" />
+      <LineId Id="300" Count="0" />
+      <LineId Id="330" Count="0" />
+      <LineId Id="371" Count="0" />
+      <LineId Id="373" Count="0" />
+      <LineId Id="362" Count="0" />
+      <LineId Id="364" Count="0" />
+      <LineId Id="363" Count="0" />
+      <LineId Id="303" Count="3" />
+      <LineId Id="415" Count="0" />
+      <LineId Id="307" Count="5" />
+      <LineId Id="413" Count="1" />
+      <LineId Id="410" Count="0" />
+      <LineId Id="406" Count="0" />
+      <LineId Id="405" Count="0" />
+      <LineId Id="402" Count="0" />
+      <LineId Id="395" Count="0" />
+      <LineId Id="313" Count="0" />
+    </LineIds>
+    <LineIds Name="Main.DoorsClosedMonitor">
+      <LineId Id="1" Count="30" />
+    </LineIds>
+    <LineIds Name="Main.Initialize">
+      <LineId Id="31" Count="7" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="51" Count="20" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="134" Count="1" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="139" Count="2" />
+      <LineId Id="165" Count="1" />
+      <LineId Id="169" Count="0" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="83" Count="1" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="170" Count="1" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="186" Count="1" />
+      <LineId Id="183" Count="0" />
+      <LineId Id="188" Count="0" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="176" Count="0" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="106" Count="21" />
+      <LineId Id="147" Count="0" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="189" Count="1" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="130" Count="2" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="150" Count="2" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="148" Count="0" />
+    </LineIds>
+    <LineIds Name="Main.LightCurtainCheck">
+      <LineId Id="1" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="2" Count="4" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="8" Count="3" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="83" Count="3" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="68" Count="1" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="53" Count="1" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="45" Count="1" />
+      <LineId Id="89" Count="1" />
+      <LineId Id="92" Count="1" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="47" Count="0" />
+    </LineIds>
+    <LineIds Name="Main.ShuttleMoverToQueue">
+      <LineId Id="1" Count="12" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="14" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

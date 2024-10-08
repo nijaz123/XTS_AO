@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.8">
+  <GVL Name="HMI" Id="{74764eea-f9f1-0a62-209b-313e6c5f9e7d}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	Start					: BOOL;
+	E_Stop					: BOOL;
+	Stop					: BOOL;
+	Resume					: BOOL;
+	ResetXTS_Error			: BOOL;
+	SafeToUnlock			: BOOL;
+	dsMoverControlFlags		: MoverControlFlags;
+	ShuttleMover			: BOOL;
+	
+	
+	//Linked to SAFETY Alias
+	LockDoors		AT %Q*	: BOOL;		
+	
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

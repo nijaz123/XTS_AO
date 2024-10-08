@@ -3,11 +3,10 @@
   <POU Name="Main" Id="{99d93c32-af77-0b47-2160-e8a9eed47eae}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM Main
 VAR
-	PowerOn			: bool	:= true;	// initialize on, turn false on second scan
-	FirstRun		: BOOL := TRUE;		// initialize on, turn false when system has reached starting postion 
-
-	i						: UINT;				// loop index variable
-	Step					: XTSSequence;		// primary sequencer
+	PowerOn					: BOOL	:= TRUE;	// initialize on, turn false on second scan
+	FirstRun				: BOOL := TRUE;		// initialize on, turn false when system has reached starting postion 
+	i						: UINT;								// loop index variable
+	Step					: XTSSequence;						// primary sequencer
 	stCaGroupRef			: AXES_GROUP_REF;
 	fbEnableGroup			: MC_GroupEnable;
 	fbAddAxis				: ARRAY[1..GVL.NUM_MOVERS] OF MC_AddAxisToGroup;
@@ -16,17 +15,16 @@ VAR
 	nToStart				: UINT;
 	allMoversHalted			: BOOL;	
 	MoversReady				: BOOL;
-	Started					: BOOL;
+	Started					: BOOL;		
 	Resumed					: BOOL;
-	bLightCurtainEntered	: R_TRIG;
-	bLightCurtainExited		: F_TRIG;
+	bLightCurtainExited		: R_TRIG;
+	bLightCurtainEntered	: F_TRIG;
 	bEstopPressed			: F_TRIG;
 	safeToOpenDoors			: BOOL;
 	allMoversNotMoving		: BOOL;
-	bDummyEstopTest			: BOOL;
+	DelayMoversTimer		: TON;
 	
 	//Timers for generating a pulse
-	Pulser		: TP;
 	PulseTON	: TON;
 	PulseTOF	: TOF;
 	OnDuration	: TIME := T#500MS;
@@ -39,14 +37,11 @@ VAR
 	fbReadM1DetectActive	: ADSREAD;
 	fbWriteM1Detect			: ADSWRITE;
 	fbDelayM1Timer			: TON;
-	IdDetectionMode			: DINT;			// 0: Standard 1: Mover1
-	IsIdDetectionValid		: BOOL;			// M1 Detection has completed
 	IsIdDetectionActive		: BOOL;			// M1 Detection currently underway
-	iStepTest				: INT;
-	bDummyDetectionTest		: BOOL;
-	
-	
-	
+	Mover1Found				: BOOL;			// M1 Detection has completed
+	Mover1Error				: BOOL;			// M1 Detection has Failed
+	M1DetectStep			: M1Detection;	
+	M1DetectAttemptCounter	: INT;
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[(* this program handles the main sequencer of this machine *)
@@ -83,18 +78,20 @@ END_IF
 
 // check for E-STOP
 bEstopPressed(CLK:=SafetyGVL.EStopStatus);
-IF bEstopPressed.Q OR bDummyEstopTest THEN
+IF bEstopPressed.Q OR HMI.E_Stop THEN
 	Step			:= XTSSequence.Stop;
-	bDummyEstopTest := FALSE;
+	HMI.E_Stop := FALSE;
 END_IF
 
 CASE Step OF
 
 //-----------------------------------------------------------------------------------------------------------------------	
 	XTSSequence.Off:
+		IF SafetyGVL.EStopStatus AND IOGVL.iPowerSupply48VDC1 AND IOGVL.iPowerSupply48VDC2 AND IOGVL.iPowerSupply48VDC3 AND Mover1Found = FALSE THEN
+			Initialize();
+		END_IF
 		// state waiting for HMI.Start
-		Initialize();
-		IF HMI.Start THEN
+		IF HMI.Start AND Mover1Found THEN
 			Step		:= XTSSequence.EnableMovers;
 			Started 	:= TRUE;
 			HMI.Start 	:= FALSE;
@@ -158,6 +155,7 @@ CASE Step OF
 				fbRemoveAxisFromGroup[i].Execute			:= FALSE;
 				MoversReady := FALSE;
 		END_FOR
+			Mover1Found := FALSE;
 			Step := XTSSequence.DisableMovers;
 		END_IF
 
@@ -330,7 +328,7 @@ IF HMI.Stop = FALSE THEN
 			IF HMI.bzone0Stop THEN
 				GVL.Station[7].bMoveToNext := TRUE;					//Send to Queue Movers Station
 			ELSE
-				GVL.Station[8].bMoveToStart := TRUE;					//Send to Load Tray Station
+				GVL.Station[7].bMoveToStart := TRUE;				//Send to Load Tray Station
 			END_IF
 
 		END_IF
@@ -377,90 +375,6 @@ IF allMoversNotMoving THEN
 ELSE
 	HMI.SafeToUnlock := FALSE;
 END_IF
-
-
-CASE iStepTest	OF
-0:
-
-	IF bDummyDetectionTest THEN
-		bDummyDetectionTest := FALSE;
-		iStepTest := 50;
-	END_IF
-
-10:// ------------------------------------------------------- begin checking for M1 detection mode setting
-		//Check for M1 Detaction Mode settings
-		fbReadM1DetectMode.NETID		:= '';
-		fbReadM1DetectMode.PORT			:= 351;
-		fbReadM1DetectMode.IDXGRP		:= GVL.pXtsProcessingUnit;
-		fbReadM1DetectMode.IDXOFFS		:= 16#03080246;
-		fbReadM1DetectMode.LEN			:= SIZEOF( IdDetectionMode );
-		fbReadM1DetectMode.DESTADDR		:= ADR( IdDetectionMode );
-		fbReadM1DetectMode.READ			:= TRUE;
-
-		iStepTest 						:= 20;
-		
-20:	// ------------------------------------------------------- Determine detection mode setting
-		fbReadM1DetectMode.READ			:= FALSE;
-		iStepTest 						:= 30;
-		
-30:// ------------------------------------------------------- Determine current M1 Detection Status
-		
-		fbWriteM1Detect.WRITE			:= FALSE;
-		
-		fbReadM1DetectValid.NETID		:= '';
-		fbReadM1DetectValid.PORT		:= 351;
-		fbReadM1DetectValid.IDXGRP		:= GVL.pXtsProcessingUnit;
-		fbReadM1DetectValid.IDXOFFS		:= 16#03080251;
-		fbReadM1DetectValid.LEN			:= SIZEOF( IsIdDetectionValid );
-		fbReadM1DetectValid.DESTADDR	:= ADR( IsIdDetectionValid );
-		fbReadM1DetectValid.READ		:= TRUE;
-		
-		fbReadM1DetectActive.NETID		:= '';
-		fbReadM1DetectActive.PORT		:= 351;
-		fbReadM1DetectActive.IDXGRP		:= GVL.pXtsProcessingUnit;
-		fbReadM1DetectActive.IDXOFFS	:= 16#03080268;
-		fbReadM1DetectActive.LEN		:= SIZEOF( IsIdDetectionActive );
-		fbReadM1DetectActive.DESTADDR	:= ADR( IsIdDetectionActive );
-		fbReadM1DetectActive.READ		:= TRUE;
-		
-		iStepTest 						:= 40;
-		
-40:// ------------------------------------------------------- Determine to activate M1 Detect or ignore
-
-		fbReadM1DetectValid.READ		:= FALSE;
-		fbReadM1DetectActive.READ		:= FALSE;
-		
-		iStepTest 						:= 50;
-		
-50:// ------------------------------------------------------- Begin M1 Detection
-
-		fbWriteM1Detect.NETID			:= '';
-		fbWriteM1Detect.PORT			:= 351;
-		fbWriteM1Detect.IDXGRP			:= GVL.pXtsProcessingUnit;
-		fbWriteM1Detect.IDXOFFS			:= 16#03080250;
-		fbWriteM1Detect.WRITE			:= TRUE;
-
-		iStepTest 						:= 60;
-		
-60:// ------------------------------------------------------- Begin M1 Detection
-
-	fbDelayM1Timer( IN := TRUE, PT := T#1000MS );
-		
-		IF fbDelayM1Timer.Q THEN
-			fbDelayM1Timer( IN := FALSE );
-			fbWriteM1Detect.WRITE			:= FALSE;
-			iStepTest 						:= 70;
-		END_IF
-
-70:// ------------------------------------------------------- Finished M1 Detection
-
-
-
-END_CASE
-
-
-// Completed Detecting Mover 1
-
 
 
 
@@ -520,32 +434,128 @@ END_VAR
 	GVL.Station[6].Position		:= 3600.0;			//	Load Parts 4
 	GVL.Station[7].Position		:= 4250.0;			//	Unload Tray
 	GVL.Station[8].Position		:= 4449.0;			//	Queue Area if operator is in workspace
-	]]></ST>
+	
+	CASE M1DetectStep OF		//This Case statement will make 10 attempts to find Mover1 and error if not successful
+		
+M1Detection.Read:// ------------------------------------------------------- Determine current M1 Detection Status
+		
+	fbWriteM1Detect.WRITE			:= FALSE;
+	
+	fbReadM1DetectValid.NETID		:= '';
+	fbReadM1DetectValid.PORT		:= 351;
+	fbReadM1DetectValid.IDXGRP		:= GVL.pXtsProcessingUnit;
+	fbReadM1DetectValid.IDXOFFS		:= 16#03080251;
+	fbReadM1DetectValid.LEN			:= SIZEOF( Mover1Found );
+	fbReadM1DetectValid.DESTADDR	:= ADR( Mover1Found );
+	fbReadM1DetectValid.READ		:= TRUE;
+	
+	fbReadM1DetectActive.NETID		:= '';
+	fbReadM1DetectActive.PORT		:= 351;
+	fbReadM1DetectActive.IDXGRP		:= GVL.pXtsProcessingUnit;
+	fbReadM1DetectActive.IDXOFFS	:= 16#03080268;
+	fbReadM1DetectActive.LEN		:= SIZEOF( IsIdDetectionActive );
+	fbReadM1DetectActive.DESTADDR	:= ADR( IsIdDetectionActive );
+	fbReadM1DetectActive.READ		:= TRUE;
+	
+	M1DetectStep 					:= M1Detection.ReadBuffer;
+		
+M1Detection.ReadBuffer:// ------------------------------------------------------- Buffer
+
+	fbDelayM1Timer( IN := TRUE, PT := T#3000MS );
+	IF fbDelayM1Timer.Q THEN
+		fbDelayM1Timer.IN				:= FALSE;
+		fbReadM1DetectValid.READ		:= FALSE;
+		fbReadM1DetectActive.READ		:= FALSE;
+		M1DetectAttemptCounter := M1DetectAttemptCounter + 1;
+		M1DetectStep 			:= M1Detection.Analyze;
+	END_IF
+		
+M1Detection.Analyze:// ------------------------------------------------------- Determine to activate M1 Detect or ignore
+	
+IF M1DetectAttemptCounter < 10 THEN
+	IF IsIdDetectionActive THEN
+		M1DetectStep					:= M1Detection.Read;
+	ELSIF Mover1Found THEN
+		M1DetectStep					:= M1Detection.Done;	// M1 Detection complete, ready to enable this mover
+	ELSE
+		M1DetectStep					:= M1Detection.Write;	// M1 Detection hasn't been started yet. So start it!	
+	END_IF
+ELSE
+	M1DetectStep				:= M1Detection.Error;	// M1 Detection Failed
+END_IF
+
+M1Detection.Write:// ------------------------------------------------------- Begin M1 Detection
+
+	fbWriteM1Detect.NETID			:= '';
+	fbWriteM1Detect.PORT			:= 351;
+	fbWriteM1Detect.IDXGRP			:= GVL.pXtsProcessingUnit;
+	fbWriteM1Detect.IDXOFFS			:= 16#03080250;
+	fbWriteM1Detect.WRITE			:= TRUE;
+
+	M1DetectStep 					:= M1Detection.WriteBuffer;
+		
+M1Detection.WriteBuffer:// ------------------------------------------------------- Buffer
+
+	fbDelayM1Timer( IN := TRUE, PT := T#2000MS );
+		
+	IF fbDelayM1Timer.Q THEN
+		fbDelayM1Timer.IN				:= FALSE;
+		fbWriteM1Detect.WRITE			:= FALSE;
+		M1DetectStep 					:= M1Detection.Read;
+	END_IF
+
+M1Detection.Done:// ------------------------------------------------------- Finished M1 Detection
+
+	Mover1Found := TRUE;
+	IsIdDetectionActive := FALSE;
+	M1DetectStep 					:= M1Detection.Read;
+
+M1Detection.Error:// ------------------------------------------------------- Failed M1 Detection
+
+	Mover1Error			:= TRUE;
+	IsIdDetectionActive := FALSE;
+
+END_CASE
+
+fbReadM1DetectValid();
+fbReadM1DetectActive();
+fbWriteM1Detect();
+fbDelayM1Timer();
+]]></ST>
       </Implementation>
     </Method>
     <Action Name="LightCurtainCheck" Id="{c8440321-cf39-0d36-2897-bf963226c8e3}">
       <Implementation>
         <ST><![CDATA[// ZONE 0  OPERATER LOADING
-bLightCurtainEntered(CLK:=HMI.bzone0Stop);
-bLightCurtainExited(CLK:=HMI.bzone0Stop);
-	IF bLightCurtainEntered.Q THEN
-		FOR i:= 1 TO GVL.NUM_MOVERS DO	
-			IF GVL.Mover[i].Position >= 4500.0 OR GVL.Mover[i].Position <= 500.0 THEN
-			GVL.Mover[i].toPause	:= TRUE;
-			GVL.Mover[i].toNext		:= FALSE;
-			GVL.Mover[i].toStart	:= FALSE;
-			END_IF
-		END_FOR
-	END_IF
-	IF bLightCurtainExited.Q THEN
-		FOR i:= 1 TO GVL.NUM_MOVERS DO	
-			IF GVL.Mover[i].Position > 4500.0 THEN
-				GVL.Mover[i].toStart	:= TRUE;
-			END_IF
-		END_FOR
-	END_IF
-	
-	
+(*
+IF SafetyGVL.AllSafetyOK THEN
+	bLightCurtainEntered(CLK:=SafetyGVL.CurtainsOK);
+	bLightCurtainExited(CLK:=SafetyGVL.CurtainsOK);
+		IF bLightCurtainEntered.Q THEN
+			FOR i:= 1 TO GVL.NUM_MOVERS DO	
+				IF GVL.Mover[i].Position > 4500.0 THEN
+				GVL.Mover[i].toPause	:= TRUE;
+				GVL.Mover[i].toNext		:= FALSE;
+				GVL.Mover[i].toStart	:= FALSE;
+				END_IF
+			END_FOR
+		END_IF
+		
+		IF bLightCurtainExited.Q THEN
+			DelayMoversTimer( IN := TRUE, PT := T#1000MS );
+		ELSIF bLightCurtainEntered.Q THEN
+			DelayMoversTimer.IN := FALSE;
+		END_IF
+		
+		IF DelayMoversTimer.Q THEN
+			FOR i:= 1 TO GVL.NUM_MOVERS DO	
+				IF GVL.Mover[i].Position > 4500.0 THEN
+					GVL.Mover[i].toStart	:= TRUE;
+				END_IF
+			END_FOR
+		END_IF
+END_IF
+	*)
 	
 	]]></ST>
       </Implementation>
@@ -586,8 +596,10 @@ END_IF]]></ST>
       <LineId Id="519" Count="0" />
       <LineId Id="32" Count="0" />
       <LineId Id="517" Count="0" />
-      <LineId Id="34" Count="4" />
+      <LineId Id="34" Count="3" />
+      <LineId Id="651" Count="0" />
       <LineId Id="41" Count="0" />
+      <LineId Id="652" Count="1" />
       <LineId Id="43" Count="4" />
       <LineId Id="340" Count="0" />
       <LineId Id="377" Count="0" />
@@ -599,7 +611,9 @@ END_IF]]></ST>
       <LineId Id="381" Count="4" />
       <LineId Id="380" Count="0" />
       <LineId Id="379" Count="0" />
-      <LineId Id="74" Count="136" />
+      <LineId Id="74" Count="41" />
+      <LineId Id="654" Count="0" />
+      <LineId Id="116" Count="94" />
       <LineId Id="374" Count="0" />
       <LineId Id="360" Count="1" />
       <LineId Id="217" Count="9" />
@@ -625,53 +639,9 @@ END_IF]]></ST>
       <LineId Id="364" Count="0" />
       <LineId Id="363" Count="0" />
       <LineId Id="303" Count="3" />
-      <LineId Id="415" Count="1" />
+      <LineId Id="415" Count="0" />
+      <LineId Id="549" Count="0" />
       <LineId Id="307" Count="5" />
-      <LineId Id="418" Count="1" />
-      <LineId Id="417" Count="0" />
-      <LineId Id="427" Count="0" />
-      <LineId Id="438" Count="0" />
-      <LineId Id="436" Count="0" />
-      <LineId Id="439" Count="0" />
-      <LineId Id="441" Count="0" />
-      <LineId Id="440" Count="0" />
-      <LineId Id="434" Count="0" />
-      <LineId Id="433" Count="0" />
-      <LineId Id="435" Count="0" />
-      <LineId Id="443" Count="5" />
-      <LineId Id="442" Count="0" />
-      <LineId Id="430" Count="1" />
-      <LineId Id="449" Count="2" />
-      <LineId Id="432" Count="0" />
-      <LineId Id="452" Count="0" />
-      <LineId Id="454" Count="1" />
-      <LineId Id="459" Count="15" />
-      <LineId Id="458" Count="0" />
-      <LineId Id="475" Count="0" />
-      <LineId Id="479" Count="0" />
-      <LineId Id="476" Count="1" />
-      <LineId Id="484" Count="0" />
-      <LineId Id="483" Count="0" />
-      <LineId Id="485" Count="0" />
-      <LineId Id="478" Count="0" />
-      <LineId Id="491" Count="1" />
-      <LineId Id="429" Count="0" />
-      <LineId Id="488" Count="0" />
-      <LineId Id="493" Count="3" />
-      <LineId Id="489" Count="1" />
-      <LineId Id="497" Count="3" />
-      <LineId Id="502" Count="3" />
-      <LineId Id="512" Count="0" />
-      <LineId Id="506" Count="0" />
-      <LineId Id="501" Count="0" />
-      <LineId Id="507" Count="0" />
-      <LineId Id="486" Count="0" />
-      <LineId Id="509" Count="1" />
-      <LineId Id="508" Count="0" />
-      <LineId Id="428" Count="0" />
-      <LineId Id="481" Count="1" />
-      <LineId Id="480" Count="0" />
-      <LineId Id="404" Count="0" />
       <LineId Id="413" Count="1" />
       <LineId Id="410" Count="0" />
       <LineId Id="406" Count="0" />
@@ -686,12 +656,56 @@ END_IF]]></ST>
     <LineIds Name="Main.Initialize">
       <LineId Id="31" Count="7" />
       <LineId Id="41" Count="0" />
-      <LineId Id="40" Count="0" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="51" Count="20" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="134" Count="1" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="139" Count="2" />
+      <LineId Id="165" Count="1" />
+      <LineId Id="169" Count="0" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="83" Count="1" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="170" Count="1" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="186" Count="1" />
+      <LineId Id="183" Count="0" />
+      <LineId Id="188" Count="0" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="176" Count="0" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="106" Count="21" />
+      <LineId Id="147" Count="0" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="189" Count="1" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="130" Count="2" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="150" Count="2" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="148" Count="0" />
     </LineIds>
     <LineIds Name="Main.LightCurtainCheck">
-      <LineId Id="1" Count="5" />
+      <LineId Id="1" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="2" Count="4" />
       <LineId Id="24" Count="0" />
-      <LineId Id="8" Count="15" />
+      <LineId Id="8" Count="4" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="40" Count="2" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="13" Count="6" />
+      <LineId Id="45" Count="3" />
     </LineIds>
     <LineIds Name="Main.ShuttleMoverToQueue">
       <LineId Id="1" Count="12" />

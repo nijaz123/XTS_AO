@@ -1,0 +1,410 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.8">
+  <POU Name="Mover" Id="{b27d7938-4edc-0d0f-18b2-976fa3f91cf1}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK Mover
+VAR_INPUT
+	Enable			: BOOL;				// Request mover enable
+	toStart			: BOOL;				// Request mover go to start position
+	toNext			: BOOL;				// Request mover go to next station	
+	toStop			: BOOL;				// Request mover to stop - meaning the movers will be stop, removed from group, and power will be shutdown to the track via an E-Stop or HMI.Stop	
+	toPause			: BOOL;				// Request mover to pause	
+	toDisable		: BOOL;				// Request mover to disable power	
+	toQueue			: BOOL;				// Request current mover at starting station to join the back of the queue
+	toReset			: BOOL;				// Request current mover at starting station to join the back of the queue
+END_VAR
+VAR_OUTPUT
+	Enabled			: BOOL;				// Mover confirmed enabled
+	Ready			: BOOL;				// Mover is enabled and ready to accept motion commands
+	Busy			: BOOL;				// Mover is processing a command or changing state
+	Position		: LREAL;			// Current mover position
+	Velocity		: LREAL;			// Current mover velocity                                	
+	Error			: UDINT;			// errorID of the active error
+	Step			: MoverSequence;	// Mover's step within sequence                                	
+	AxisReference	: AXIS_REF;			// Motion link variable. Left as output so the link can be made directly, and accessed by external code
+	TargetStation	: USINT;
+END_VAR
+VAR
+	// Motion commands
+	fbPower					: MC_Power;
+	fbReset					: MC_Reset;
+	fbHaltCA				: MC_HaltCA;
+	fbMoveAbsCA				: MC_MoveAbsoluteCA;
+	fbMoveAbsCABlended		: MC_MoveAbsoluteCA;
+	
+	MoveCommandVel			: LREAL := 50;
+	PosLow					: LREAL;
+	PosHigh					: LREAL;
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* this function block handles each Mover's axis *)
+
+// feedback
+
+
+
+	AxisReference.ReadStatus();
+
+	Enabled		:= NOT AxisReference.Status.Disabled;
+	Ready		:= AxisReference.Status.NotMoving AND NOT AxisReference.Status.Error AND NOT AxisReference.Status.Disabled;
+	Busy		:= AxisReference.Status.Moving;
+	Position	:= AxisReference.NcToPlc.ModuloActPos;
+	Velocity	:= AxisReference.NcToPlc.ActVelo;
+	Error		:= AxisReference.NcToPlc.ErrorCode;
+	
+	IF Step = MoverSequence.AtStart AND toQueue THEN
+		Step := MoverSequence.MovingToQueue;
+		toQueue := FALSE;
+	END_IF
+	
+	
+
+	IF toStop OR toPause THEN
+		fbMoveAbsCA.Execute		:= FALSE;
+		fbHaltCA.Execute 		:= TRUE;
+		fbHaltCA.Deceleration 	:= 1E4;
+		IF toStop THEN
+			Step := MoverSequence.Stopping;
+		ELSIF toPause THEN
+			Step := MoverSequence.Pausing;
+		END_IF
+	END_IF
+	
+	IF toReset THEN
+		Step := MoverSequence.Reset;
+		toReset := FALSE;
+	END_IF
+
+CASE Step OF
+	//-----------------------------------------------------------------------------------------------------------------------
+	MoverSequence.Reset:	
+	
+	fbReset.Execute := TRUE;
+	IF fbReset.Busy THEN
+		Step := MoverSequence.Resetting;
+	END_IF
+	
+	//-----------------------------------------------------------------------------------------------------------------------
+	MoverSequence.Resetting:	
+	
+	IF fbReset.Done THEN
+		fbReset.Execute := FALSE;
+		Step := MoverSequence.Waiting;
+	END_IF
+
+	//-----------------------------------------------------------------------------------------------------------------------
+	MoverSequence.MovingToQueue:	
+	
+	IF NOT fbMoveAbsCA.Busy AND NOT fbMoveAbsCA.Done THEN			//Add additional condition that the doors are not unlcoked
+			fbMoveAbsCA.Execute			:= TRUE;
+			fbMoveAbsCA.Position		:= GVL.Station[GVL.startStation].Position+2000;
+			fbMoveAbsCA.Velocity		:= MoveCommandVel;										// parameterize
+			fbMoveAbsCA.Direction		:= MC_Positive_Direction;						// usually positive
+		END_IF
+		// check for error
+		IF fbMoveAbsCA.Error THEN
+			Error				:= fbMoveAbsCA.ErrorId;
+			Step				:= MoverSequence.Error;
+			fbMoveAbsCA.Execute	:= FALSE;
+		END_IF
+		// check for move complete THEN proceed to starting station
+		IF fbMoveAbsCA.Busy AND Position > 1500.0 AND Position < 6900.0 THEN 		//When mover sits at position 0 the values jump +-0 so an asdditional condition must be used
+			fbMoveAbsCABlended.Execute		:= TRUE;
+			//bDummy							:= TRUE;
+			fbMoveAbsCABlended.Position		:= GVL.Station[GVL.startStation].Position;
+			fbMoveAbsCABlended.Velocity		:= MoveCommandVel;
+			fbMoveAbsCABlended.BufferMode	:= mcAborting;
+			fbMoveAbsCABlended.Direction 	:= MC_Positive_Direction;
+			Step							:= MoverSequence.AtQueue;
+		END_IF
+		
+	//-----------------------------------------------------------------------------------------------------------------------
+	MoverSequence.AtQueue:	
+	
+	IF fbMoveAbsCABlended.Busy THEN
+		fbMoveAbsCABlended.Execute			:= FALSE;
+		fbMoveAbsCA.Execute					:= FALSE;
+		Step								:= MoverSequence.MovingToStart;
+	END_IF
+	
+	
+//-----------------------------------------------------------------------------------------------------------------------
+	MoverSequence.Stopping:	
+	
+		IF fbHaltCA.Done OR AxisReference.Status.StandStill OR AxisReference.Status.NotMoving THEN
+			fbHaltCA.Execute 	:= FALSE;
+			toStart				:= FALSE;
+			toNext				:= FALSE;
+			toStop				:= FALSE;
+			Step := MoverSequence.Disabling;
+			END_IF
+			
+//-----------------------------------------------------------------------------------------------------------------------
+	MoverSequence.Disabling:		//RESULT OF PRESSING STOP
+	 // Waiting area 
+	 
+	 IF toDisable THEN
+		Enable						:= FALSE;
+		fbPower.Enable				:= FALSE;
+		fbPower.Enable_Positive		:= FALSE;
+		fbPower.Enable_Negative		:= FALSE;
+		fbPower.BufferMode			:= MC_Aborting;
+		fbPower.Override			:= 100;
+		IF AxisReference.Status.Disabled THEN
+			toDisable := FALSE;
+			Step := MoverSequence.Off;
+		END_IF
+	END_IF
+			
+//-----------------------------------------------------------------------------------------------------------------------
+	MoverSequence.Pausing:	
+	
+	
+		IF fbHaltCA.Done THEN
+			fbHaltCA.Execute 	:= FALSE;
+			toStart				:= FALSE;
+			toNext				:= FALSE;
+			toPause				:= FALSE;
+			Step := MoverSequence.OFF;
+			END_IF
+
+//-----------------------------------------------------------------------------------------------------------------------
+	MoverSequence.Off:
+		// when enable request is true, use MC_Power function block
+		IF Enable THEN
+			fbPower.Enable_Positive := TRUE;
+			fbPower.Enable := TRUE;
+		END_IF
+		IF Enabled THEN
+			Step	:= MoverSequence.Idle;
+		END_IF
+		
+//-----------------------------------------------------------------------------------------------------------------------	
+	MoverSequence.Idle:
+		// ready and awaiting either toStart or toNext
+		IF toStart THEN
+			TargetStation		:= GVL.startStation;
+			Step				:= MoverSequence.MovingToStart;
+		ELSIF toNext THEN
+			Step				:= MoverSequence.MovingToStation;
+		END_IF
+		
+//-----------------------------------------------------------------------------------------------------------------------	
+	MoverSequence.MovingToStart:
+		// move absolute with collision avoidance to start station
+		IF NOT fbMoveAbsCA.Busy AND NOT fbMoveAbsCA.Done THEN			//Add additional condition that the doors are not unlcoked
+			fbMoveAbsCA.Execute			:= TRUE;
+			fbMoveAbsCA.Position		:= GVL.Station[GVL.startStation].Position;
+			fbMoveAbsCA.Velocity		:= MoveCommandVel;										// parameterize
+			fbMoveAbsCA.Direction		:= MC_Positive_Direction;						// usually positive
+		ELSE
+			fbMoveAbsCA.Execute			:= FALSE;
+		END_IF
+		// check for error
+		IF fbMoveAbsCA.Error THEN
+			Error				:= fbMoveAbsCA.ErrorId;
+			Step				:= MoverSequence.Error;
+			fbMoveAbsCA.Execute	:= FALSE;
+		END_IF
+		// check for move complete
+		IF fbMoveAbsCA.Done OR (Position > -3 AND Position < 3) THEN
+			fbMoveAbsCA.Execute	:= FALSE;
+			toStart				:= FALSE;
+			Step				:= MoverSequence.AtStart;
+		END_IF
+		
+//-----------------------------------------------------------------------------------------------------------------------	
+	MoverSequence.AtStart:
+		toStart					:= FALSE;							//Add additional condition that the doors are not unlcoked
+		// wait for command to next station
+		IF toNext THEN
+			IF TargetStation < GVL.NUM_STATIONS THEN
+				// next station
+				TargetStation	:= TargetStation + 1;
+			ELSE
+				// at last station, next station is 1
+				TargetStation	:= 1;
+			END_IF
+			Step				:= MoverSequence.MovingToStation;
+		END_IF
+//-----------------------------------------------------------------------------------------------------------------------	
+	MoverSequence.MovingToStation:
+		// move absolute with collision avoidance to next station		//Add additional condition that the doors are not unlcoked
+		fbMoveAbsCA.Execute			:= TRUE;
+				fbMoveAbsCA.Position		:= GVL.Station[TargetStation].Position;
+				fbMoveAbsCA.Velocity		:= MoveCommandVel;										// parameterize
+				fbMoveAbsCA.Direction		:= MC_Positive_Direction;						// usually positive
+		// check for error
+		IF fbMoveAbsCA.Error THEN
+			Error				:= fbMoveAbsCA.ErrorId;
+			Step				:= MoverSequence.Error;
+			fbMoveAbsCA.Execute	:= FALSE;
+		END_IF
+		// check for move complete
+		IF fbMoveAbsCA.Done THEN
+			fbMoveAbsCA.Execute := FALSE;
+			toNext				:= FALSE;
+			Step				:= MoverSequence.AtStation;
+		END_IF
+//-----------------------------------------------------------------------------------------------------------------------	
+	MoverSequence.AtStation:
+		// wait for command to next station
+		IF toNext THEN															//Add additional condition that the doors are not unlcoked
+			IF TargetStation < GVL.NUM_STATIONS THEN
+				// next station
+				TargetStation	:= TargetStation + 1;
+			ELSE
+				// at last station, next station is 1
+				TargetStation	:= 1;
+			END_IF
+			Step				:= MoverSequence.MovingToStation;
+		END_IF	
+		IF toStart THEN
+			Step				:= MoverSequence.MovingToStart;
+		END_IF
+		
+END_CASE
+
+	fbPower(Axis := AxisReference);
+	fbReset(Axis := AxisReference);
+	fbHaltCA(Axis := AxisReference);
+	fbMoveAbsCA(Axis := AxisReference);
+	fbMoveAbsCABlended(Axis := AxisReference);
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="Mover">
+      <LineId Id="1" Count="2" />
+      <LineId Id="506" Count="1" />
+      <LineId Id="411" Count="1" />
+      <LineId Id="410" Count="0" />
+      <LineId Id="4" Count="0" />
+      <LineId Id="57" Count="1" />
+      <LineId Id="64" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="389" Count="0" />
+      <LineId Id="417" Count="0" />
+      <LineId Id="419" Count="0" />
+      <LineId Id="421" Count="0" />
+      <LineId Id="420" Count="0" />
+      <LineId Id="418" Count="0" />
+      <LineId Id="508" Count="0" />
+      <LineId Id="164" Count="0" />
+      <LineId Id="139" Count="0" />
+      <LineId Id="213" Count="1" />
+      <LineId Id="211" Count="0" />
+      <LineId Id="503" Count="2" />
+      <LineId Id="314" Count="0" />
+      <LineId Id="502" Count="0" />
+      <LineId Id="190" Count="0" />
+      <LineId Id="509" Count="2" />
+      <LineId Id="520" Count="0" />
+      <LineId Id="512" Count="0" />
+      <LineId Id="188" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="513" Count="0" />
+      <LineId Id="515" Count="0" />
+      <LineId Id="517" Count="0" />
+      <LineId Id="525" Count="0" />
+      <LineId Id="528" Count="0" />
+      <LineId Id="524" Count="0" />
+      <LineId Id="521" Count="0" />
+      <LineId Id="532" Count="0" />
+      <LineId Id="522" Count="1" />
+      <LineId Id="526" Count="1" />
+      <LineId Id="529" Count="0" />
+      <LineId Id="531" Count="0" />
+      <LineId Id="530" Count="0" />
+      <LineId Id="514" Count="0" />
+      <LineId Id="422" Count="1" />
+      <LineId Id="429" Count="0" />
+      <LineId Id="431" Count="3" />
+      <LineId Id="469" Count="0" />
+      <LineId Id="442" Count="8" />
+      <LineId Id="455" Count="0" />
+      <LineId Id="474" Count="0" />
+      <LineId Id="456" Count="0" />
+      <LineId Id="454" Count="0" />
+      <LineId Id="464" Count="0" />
+      <LineId Id="468" Count="0" />
+      <LineId Id="453" Count="0" />
+      <LineId Id="430" Count="0" />
+      <LineId Id="457" Count="3" />
+      <LineId Id="424" Count="0" />
+      <LineId Id="461" Count="0" />
+      <LineId Id="465" Count="1" />
+      <LineId Id="462" Count="0" />
+      <LineId Id="425" Count="0" />
+      <LineId Id="428" Count="0" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="179" Count="0" />
+      <LineId Id="352" Count="0" />
+      <LineId Id="216" Count="0" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="346" Count="1" />
+      <LineId Id="356" Count="0" />
+      <LineId Id="273" Count="0" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="325" Count="0" />
+      <LineId Id="327" Count="10" />
+      <LineId Id="339" Count="3" />
+      <LineId Id="326" Count="0" />
+      <LineId Id="490" Count="11" />
+      <LineId Id="316" Count="0" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="8" Count="3" />
+      <LineId Id="404" Count="0" />
+      <LineId Id="14" Count="3" />
+      <LineId Id="238" Count="0" />
+      <LineId Id="18" Count="3" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="22" Count="3" />
+      <LineId Id="239" Count="0" />
+      <LineId Id="28" Count="2" />
+      <LineId Id="124" Count="0" />
+      <LineId Id="31" Count="1" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="126" Count="1" />
+      <LineId Id="125" Count="0" />
+      <LineId Id="43" Count="1" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="49" Count="2" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="67" Count="3" />
+      <LineId Id="72" Count="1" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="82" Count="2" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="90" Count="1" />
+      <LineId Id="96" Count="5" />
+      <LineId Id="103" Count="3" />
+      <LineId Id="108" Count="1" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="110" Count="1" />
+      <LineId Id="114" Count="9" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="414" Count="2" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="394" Count="3" />
+      <LineId Id="393" Count="0" />
+      <LineId Id="391" Count="1" />
+      <LineId Id="390" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
