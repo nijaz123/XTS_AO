@@ -111,7 +111,6 @@ CASE Step OF
 		// check for move complete THEN proceed to starting station
 		IF fbMoveAbsCA.Busy AND Position > 1500.0 AND Position < 6900.0 THEN 		//When mover sits at position 0 the values jump +-0 so an asdditional condition must be used
 			fbMoveAbsCABlended.Execute		:= TRUE;
-			//bDummy							:= TRUE;
 			fbMoveAbsCABlended.Position		:= GVL.Station[GVL.startStation].Position;
 			fbMoveAbsCABlended.Velocity		:= MoveCommandVel;
 			fbMoveAbsCABlended.BufferMode	:= mcAborting;
@@ -128,7 +127,6 @@ CASE Step OF
 		Step								:= MoverSequence.MovingToStart;
 	END_IF
 	
-	
 //-----------------------------------------------------------------------------------------------------------------------
 	MoverSequence.Stopping:	
 	
@@ -142,7 +140,6 @@ CASE Step OF
 			
 //-----------------------------------------------------------------------------------------------------------------------
 	MoverSequence.Disabling:		//RESULT OF PRESSING STOP
-	 // Waiting area 
 	 
 	 IF toDisable THEN
 		Enable						:= FALSE;
@@ -159,7 +156,6 @@ CASE Step OF
 			
 //-----------------------------------------------------------------------------------------------------------------------
 	MoverSequence.Pausing:	
-	
 	
 		IF fbHaltCA.Done THEN
 			fbHaltCA.Execute 	:= FALSE;
@@ -196,7 +192,7 @@ CASE Step OF
 		IF NOT fbMoveAbsCA.Busy AND NOT fbMoveAbsCA.Done THEN			//Add additional condition that the doors are not unlcoked
 			fbMoveAbsCA.Execute			:= TRUE;
 			fbMoveAbsCA.Position		:= GVL.Station[GVL.startStation].Position;
-			fbMoveAbsCA.Velocity		:= MoveCommandVel;										// parameterize
+			fbMoveAbsCA.Velocity		:= MoveCommandVel;								// parameterize
 			fbMoveAbsCA.Direction		:= MC_Positive_Direction;						// usually positive
 		ELSE
 			fbMoveAbsCA.Execute			:= FALSE;
@@ -208,7 +204,7 @@ CASE Step OF
 			fbMoveAbsCA.Execute	:= FALSE;
 		END_IF
 		// check for move complete
-		IF fbMoveAbsCA.Done OR (Position > -3 AND Position < 3) THEN
+		IF fbMoveAbsCA.Done OR (Position > (GVL.Station[1].Position - 5) AND Position < (GVL.Station[1].Position + 5)) THEN
 			fbMoveAbsCA.Execute	:= FALSE;
 			toStart				:= FALSE;
 			Step				:= MoverSequence.AtStart;
@@ -322,9 +318,7 @@ END_CASE
       <LineId Id="431" Count="3" />
       <LineId Id="469" Count="0" />
       <LineId Id="442" Count="8" />
-      <LineId Id="455" Count="0" />
-      <LineId Id="474" Count="0" />
-      <LineId Id="456" Count="0" />
+      <LineId Id="455" Count="1" />
       <LineId Id="454" Count="0" />
       <LineId Id="464" Count="0" />
       <LineId Id="468" Count="0" />
@@ -336,7 +330,6 @@ END_CASE
       <LineId Id="465" Count="1" />
       <LineId Id="462" Count="0" />
       <LineId Id="425" Count="0" />
-      <LineId Id="428" Count="0" />
       <LineId Id="182" Count="0" />
       <LineId Id="179" Count="0" />
       <LineId Id="352" Count="0" />
@@ -347,10 +340,12 @@ END_CASE
       <LineId Id="273" Count="0" />
       <LineId Id="269" Count="0" />
       <LineId Id="325" Count="0" />
-      <LineId Id="327" Count="10" />
+      <LineId Id="327" Count="1" />
+      <LineId Id="330" Count="7" />
       <LineId Id="339" Count="3" />
       <LineId Id="326" Count="0" />
-      <LineId Id="490" Count="11" />
+      <LineId Id="490" Count="3" />
+      <LineId Id="495" Count="6" />
       <LineId Id="316" Count="0" />
       <LineId Id="149" Count="0" />
       <LineId Id="8" Count="3" />

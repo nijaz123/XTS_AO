@@ -17,8 +17,8 @@ VAR
 	MoversReady				: BOOL;
 	Started					: BOOL;		
 	Resumed					: BOOL;
-	bLightCurtainExited		: R_TRIG;
-	bLightCurtainEntered	: F_TRIG;
+	bLightCurtainEntered	: R_TRIG;
+	bLightCurtainExited		: F_TRIG;
 	bEstopPressed			: F_TRIG;
 	safeToOpenDoors			: BOOL;
 	allMoversNotMoving		: BOOL;
@@ -238,7 +238,6 @@ CASE Step OF
 IF bOperatorLoadingTrays = FALSE THEN
 	FOR i:= 1 TO GVL.NUM_MOVERS DO
 		GVL.Mover[i].toStart	:= TRUE;
-		iDummyLightCurtainTest := iDummyLightCurtainTest + 1;
 	END_FOR
 	// verify one mover is at start, all others have commands and are at zero speed
 	nAtStart	:= 0;
@@ -528,43 +527,44 @@ fbDelayM1Timer();
       <Implementation>
         <ST><![CDATA[// ZONE 0  OPERATER LOADING
 
-//IF SafetyGVL.AllSafetyOK AND allMoversNotMoving = FALSE THEN
-IF SafetyGVL.AllSafetyOK THEN
-	bLightCurtainEntered(CLK:=SafetyGVL.CurtainsOK);
-	bLightCurtainExited(CLK:=SafetyGVL.CurtainsOK);
-		IF bLightCurtainEntered.Q THEN
-			FOR i:= 1 TO GVL.NUM_MOVERS DO	
-				IF GVL.Mover[i].Position > 4500.0 THEN
-				GVL.Mover[i].toPause	:= TRUE;
-				GVL.Mover[i].toNext		:= FALSE;
-				GVL.Mover[i].toStart	:= FALSE;
-				END_IF
-			END_FOR
-		ELSIF DelayMoversTimer.Q THEN
-			FOR i:= 1 TO GVL.NUM_MOVERS DO	
-				IF GVL.Mover[i].Position > 4500.0 THEN
-					GVL.Mover[i].toStart	:= TRUE;
-				END_IF
-			END_FOR
-			DelayMoversTimer.IN := FALSE;
-		END_IF
-		
-		IF bLightCurtainExited.Q THEN
-			DelayMoversTimer( IN := TRUE, PT := T#2000MS );
-		END_IF
-	
-		bLightCurtainEntered();
-		bLightCurtainExited();
-		DelayMoversTimer();
-		
-END_IF
-	
 IF SafetyGVL.CurtainsOK THEN
 	bOperatorLoadingTrays := FALSE;
 ELSE
 	bOperatorLoadingTrays := TRUE;
 END_IF
-]]></ST>
+
+
+IF SafetyGVL.AllSafetyOK THEN
+	bLightCurtainEntered(CLK:=bOperatorLoadingTrays);
+	bLightCurtainExited(CLK:=bOperatorLoadingTrays);
+	IF bLightCurtainEntered.Q THEN
+		FOR i:= 1 TO GVL.NUM_MOVERS DO	
+			IF GVL.Mover[i].Position > 4500.0 OR GVL.Mover[i].Position < 250.0 THEN
+				GVL.Mover[i].toPause	:= TRUE;
+				GVL.Mover[i].toNext		:= FALSE;
+				GVL.Mover[i].toStart	:= FALSE;
+			END_IF
+		END_FOR
+	END_IF
+	
+	IF bLightCurtainExited.Q THEN
+		DelayMoversTimer( IN := TRUE, PT := T#2000MS );
+	END_IF
+		
+	IF DelayMoversTimer.Q THEN
+		FOR i:= 1 TO GVL.NUM_MOVERS DO	
+			IF GVL.Mover[i].Position > 4500.0 OR GVL.Mover[i].Position < 250.0 THEN
+				GVL.Mover[i].toStart	:= TRUE;
+			END_IF
+		END_FOR
+		DelayMoversTimer.IN := FALSE;
+	END_IF
+	
+	bLightCurtainEntered();
+	bLightCurtainExited();
+	DelayMoversTimer();
+END_IF
+	]]></ST>
       </Implementation>
     </Action>
     <Action Name="ShuttleMoverToQueue" Id="{1ea195c0-e199-0839-0126-992a39ca089e}">
@@ -616,9 +616,7 @@ END_IF]]></ST>
       <LineId Id="379" Count="0" />
       <LineId Id="74" Count="41" />
       <LineId Id="654" Count="0" />
-      <LineId Id="116" Count="77" />
-      <LineId Id="659" Count="0" />
-      <LineId Id="194" Count="16" />
+      <LineId Id="116" Count="94" />
       <LineId Id="374" Count="0" />
       <LineId Id="360" Count="1" />
       <LineId Id="217" Count="9" />
@@ -698,29 +696,28 @@ END_IF]]></ST>
     </LineIds>
     <LineIds Name="Main.LightCurtainCheck">
       <LineId Id="1" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="99" Count="4" />
+      <LineId Id="98" Count="0" />
       <LineId Id="50" Count="0" />
       <LineId Id="49" Count="0" />
-      <LineId Id="94" Count="0" />
       <LineId Id="2" Count="4" />
       <LineId Id="24" Count="0" />
       <LineId Id="8" Count="3" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="112" Count="1" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="94" Count="0" />
       <LineId Id="80" Count="0" />
       <LineId Id="83" Count="3" />
       <LineId Id="82" Count="0" />
-      <LineId Id="81" Count="0" />
+      <LineId Id="108" Count="0" />
       <LineId Id="12" Count="0" />
-      <LineId Id="36" Count="0" />
-      <LineId Id="68" Count="1" />
-      <LineId Id="72" Count="0" />
-      <LineId Id="57" Count="0" />
+      <LineId Id="104" Count="0" />
       <LineId Id="53" Count="1" />
       <LineId Id="56" Count="0" />
-      <LineId Id="55" Count="0" />
       <LineId Id="45" Count="1" />
-      <LineId Id="89" Count="1" />
-      <LineId Id="92" Count="1" />
-      <LineId Id="91" Count="0" />
-      <LineId Id="47" Count="0" />
     </LineIds>
     <LineIds Name="Main.ShuttleMoverToQueue">
       <LineId Id="1" Count="12" />

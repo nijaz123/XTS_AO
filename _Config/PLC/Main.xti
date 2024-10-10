@@ -1305,7 +1305,7 @@ External Setpoint Generation:
 		</DataType>
 	</DataTypes>
 	<Project GUID="{DD3A0B29-8E7C-4E32-989D-B0222C998777}" Name="Main" PrjFilePath="..\..\Main\Main.plcproj" TmcFilePath="..\..\Main\Main.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-		<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcHash="{77FBEE16-1766-7E12-A826-B8C422CC3731}" TmcPath="Main\Main.tmc">
+		<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcHash="{04B582AA-EDBD-D62D-9B31-86B038B48135}" TmcPath="Main\Main.tmc">
 			<Name>Main Instance</Name>
 			<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 			<Vars VarGrpType="2" AreaNo="1">
@@ -1313,23 +1313,6 @@ External Setpoint Generation:
 				<Var>
 					<Name>Main.stCaGroupRef.PlcToNc</Name>
 					<Type GUID="{0E2E3852-A98C-4AF3-81E2-209EE128940C}" Namespace="MC">CDT_PLCTOMC_GROUP</Type>
-				</Var>
-				<Var>
-					<Name>SafetyGVL.err_ack</Name>
-					<Comment><![CDATA[OUTPUTS TO SAFETY GROUP]]></Comment>
-					<Type>BOOL</Type>
-				</Var>
-				<Var>
-					<Name>SafetyGVL.run</Name>
-					<Type>BOOL</Type>
-				</Var>
-				<Var>
-					<Name>SafetyGVL.DoorsClosed</Name>
-					<Type>BOOL</Type>
-				</Var>
-				<Var>
-					<Name>SafetyGVL.ResetCurtains</Name>
-					<Type>BOOL</Type>
 				</Var>
 				<Var>
 					<Name>GVL.Mover[1].AxisReference.PlcToNc</Name>
@@ -1494,29 +1477,29 @@ OUTPUTS]]></Comment>
 					<Name>IOGVL.oLubeON</Name>
 					<Type>BOOL</Type>
 				</Var>
+				<Var>
+					<Name>SafetyGVL.err_ack</Name>
+					<Comment><![CDATA[OUTPUTS TO SAFETY GROUP]]></Comment>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>SafetyGVL.run</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>SafetyGVL.DoorsClosed</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>SafetyGVL.ResetCurtains</Name>
+					<Type>BOOL</Type>
+				</Var>
 			</Vars>
 			<Vars VarGrpType="1">
 				<Name>PlcTask Inputs</Name>
 				<Var>
 					<Name>Main.stCaGroupRef.NcToPlc</Name>
 					<Type GUID="{467F4325-10DF-4BC1-88DD-E8240EB4F8E3}" Namespace="MC">CDT_MCTOPLC_GROUP</Type>
-				</Var>
-				<Var>
-					<Name>SafetyGVL.CurtainsOK</Name>
-					<Comment><![CDATA[INPUTS FROM SAFETY GROUP]]></Comment>
-					<Type>BOOL</Type>
-				</Var>
-				<Var>
-					<Name>SafetyGVL.AllSafetyOK</Name>
-					<Type>BOOL</Type>
-				</Var>
-				<Var>
-					<Name>SafetyGVL.EStopStatus</Name>
-					<Type>BOOL</Type>
-				</Var>
-				<Var>
-					<Name>SafetyGVL.DoorsLocked</Name>
-					<Type>BOOL</Type>
 				</Var>
 				<Var>
 					<Name>GVL.Mover[1].AxisReference.NcToPlc</Name>
@@ -1720,6 +1703,23 @@ OUTPUTS]]></Comment>
 				</Var>
 				<Var>
 					<Name>IOGVL.iBrakeResistorON</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>SafetyGVL.CurtainsOK</Name>
+					<Comment><![CDATA[INPUTS FROM SAFETY GROUP]]></Comment>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>SafetyGVL.AllSafetyOK</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>SafetyGVL.EStopStatus</Name>
+					<Type>BOOL</Type>
+				</Var>
+				<Var>
+					<Name>SafetyGVL.DoorsLocked</Name>
 					<Type>BOOL</Type>
 				</Var>
 			</Vars>
