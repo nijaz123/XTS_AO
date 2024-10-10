@@ -14,6 +14,7 @@ VAR
 	nAtStart				: UINT;
 	nToStart				: UINT;
 	allMoversHalted			: BOOL;	
+	allMoversEnabled		: BOOL := FALSE;
 	MoversReady				: BOOL;
 	Started					: BOOL;		
 	Resumed					: BOOL;
@@ -64,6 +65,7 @@ FOR i := 1 TO GVL.NUM_MOVERS DO
 	ELSE
 		allMoversNotMoving	:= TRUE;
 	END_IF
+	
 	
 END_FOR
 FOR i := 1 TO GVL.NUM_STATIONS DO
@@ -169,7 +171,7 @@ CASE Step OF
 	FOR i := 1 TO GVL.NUM_MOVERS  DO
 		GVL.Mover[i].toDisable := TRUE;
 	END_FOR
-	
+	allMoversEnabled := FALSE;
 	Step := XTSSequence.Off;
 		
 //-----------------------------------------------------------------------------------------------------------------------			
@@ -218,6 +220,7 @@ CASE Step OF
 			fbAddAxis[i].IdentInGroup := UDINT_TO_IDENTINGROUP(UINT_TO_UDINT(i));
 			fbAddAxis[i].Execute := FALSE;
 			Step	:= XTSSequence.StandBy;
+			allMoversEnabled := TRUE;
 		END_FOR
 	END_IF
 		
@@ -237,22 +240,13 @@ CASE Step OF
 	XTSSequence.Start:
 		// request all movers proceed to starting station
 IF bOperatorLoadingTrays = FALSE THEN
+	
 	FOR i:= 1 TO GVL.NUM_MOVERS DO
 		GVL.Mover[i].toStart	:= TRUE;
 	END_FOR
-	// verify one mover is at start, all others have commands and are at zero speed
-	nAtStart	:= 0;
-	nToStart	:= 0;
-	FOR i:= 1 TO GVL.NUM_MOVERS DO
-		IF GVL.Mover[i].Step = MoverSequence.AtStart THEN
-			nAtStart	:= nAtStart + 1;
-		ELSIF GVL.Mover[i].Step = MoverSequence.MovingToStart THEN
-			nToStart	:= nToStart + 1;
-		END_IF
-	END_FOR
-	IF nAtStart = 1 AND nToStart = GVL.NUM_MOVERS - 1 THEN
-		Step	:= XTSSequence.Run;
-	END_IF
+	Step	:= XTSSequence.Run;
+ELSE
+	Step	:= XTSSequence.Run;
 END_IF	
 //-----------------------------------------------------------------------------------------------------------------------	
 	XTSSequence.Run:
@@ -534,8 +528,7 @@ ELSE
 	bOperatorLoadingTrays := TRUE;
 END_IF
 
-
-IF SafetyGVL.AllSafetyOK THEN
+IF SafetyGVL.AllSafetyOK AND allMoversEnabled THEN
 
 	IF bOperatorLoadingTrays AND bCurtainOneShot = FALSE THEN
 		FOR i:= 1 TO GVL.NUM_MOVERS DO	
@@ -546,29 +539,27 @@ IF SafetyGVL.AllSafetyOK THEN
 			END_IF
 		END_FOR
 		bCurtainOneShot := TRUE;
-		bDummyLightCurtainTest := TRUE;
 	END_IF
 	
 	IF bOperatorLoadingTrays = FALSE AND bCurtainOneShot AND DelayMoversTimer.IN = FALSE THEN
-		DelayMoversTimer( IN := TRUE, PT := T#2000MS );
+		DelayMoversTimer( IN := TRUE, PT := T#1000MS );
 	END_IF
 		
 	IF DelayMoversTimer.Q THEN
 		FOR i:= 1 TO GVL.NUM_MOVERS DO	
-			IF GVL.Mover[i].Position > 4500.0 OR GVL.Mover[i].Position < 250.0 THEN
+			IF GVL.Mover[i].Position > 4500.0 OR GVL.Mover[i].Position < (GVL.Station[1].Position) THEN
 				GVL.Mover[i].toStart	:= TRUE;
+			ELSIF GVL.Mover[i].Position > (GVL.Station[1].Position + 1) AND GVL.Mover[i].Position < (GVL.Station[1].Position + 250) THEN
+				GVL.Mover[i].toNext	:= TRUE;
 			END_IF
 		END_FOR
 		DelayMoversTimer.IN := FALSE;
 		bCurtainOneShot := FALSE;
-		bDummyLightCurtainTest := FALSE;
 	END_IF
 
 	DelayMoversTimer();
 END_IF
-	
-
-//bCurtainOneShot]]></ST>
+	]]></ST>
       </Implementation>
     </Action>
     <Action Name="ShuttleMoverToQueue" Id="{1ea195c0-e199-0839-0126-992a39ca089e}">
@@ -591,7 +582,9 @@ END_IF]]></ST>
       </Implementation>
     </Action>
     <LineIds Name="Main">
-      <LineId Id="1" Count="22" />
+      <LineId Id="1" Count="14" />
+      <LineId Id="659" Count="0" />
+      <LineId Id="16" Count="7" />
       <LineId Id="521" Count="0" />
       <LineId Id="520" Count="0" />
       <LineId Id="522" Count="0" />
@@ -620,7 +613,14 @@ END_IF]]></ST>
       <LineId Id="379" Count="0" />
       <LineId Id="74" Count="41" />
       <LineId Id="654" Count="0" />
-      <LineId Id="116" Count="94" />
+      <LineId Id="116" Count="56" />
+      <LineId Id="660" Count="0" />
+      <LineId Id="173" Count="18" />
+      <LineId Id="656" Count="0" />
+      <LineId Id="192" Count="2" />
+      <LineId Id="206" Count="0" />
+      <LineId Id="657" Count="1" />
+      <LineId Id="208" Count="2" />
       <LineId Id="374" Count="0" />
       <LineId Id="360" Count="1" />
       <LineId Id="217" Count="9" />
@@ -702,31 +702,28 @@ END_IF]]></ST>
       <LineId Id="1" Count="0" />
       <LineId Id="97" Count="0" />
       <LineId Id="99" Count="4" />
-      <LineId Id="98" Count="0" />
       <LineId Id="50" Count="0" />
       <LineId Id="49" Count="0" />
       <LineId Id="3" Count="3" />
       <LineId Id="24" Count="0" />
       <LineId Id="8" Count="3" />
       <LineId Id="116" Count="0" />
-      <LineId Id="118" Count="0" />
       <LineId Id="95" Count="0" />
       <LineId Id="110" Count="0" />
       <LineId Id="112" Count="1" />
       <LineId Id="111" Count="0" />
       <LineId Id="94" Count="0" />
       <LineId Id="80" Count="0" />
-      <LineId Id="83" Count="3" />
+      <LineId Id="83" Count="2" />
+      <LineId Id="120" Count="1" />
+      <LineId Id="86" Count="0" />
       <LineId Id="82" Count="0" />
       <LineId Id="108" Count="0" />
       <LineId Id="117" Count="0" />
-      <LineId Id="119" Count="0" />
       <LineId Id="12" Count="0" />
       <LineId Id="54" Count="0" />
       <LineId Id="56" Count="0" />
       <LineId Id="45" Count="1" />
-      <LineId Id="115" Count="0" />
-      <LineId Id="114" Count="0" />
     </LineIds>
     <LineIds Name="Main.ShuttleMoverToQueue">
       <LineId Id="1" Count="12" />

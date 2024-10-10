@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<safetyApplication Crc="3968310231" xmlns:dm0="http://schemas.microsoft.com/VisualStudio/2008/DslTools/Core" dslVersion="1.5.0.0" Id="e6bb3767-7d10-4d1a-a4ec-b58a8a61b79a" name="" mapState="false" mapDiag="false" groupOrderId="0" passificationAllowed="false" temporaryDeactivationAllowed="false" permamentDeactivationAllowed="false" xmlid="0" analogFBOutputReplacementValues="Zero" verifyAnalogFBInputsIfStart="false" userFbId="00000000-0000-0000-0000-000000000000" xmlns="http://schemas.microsoft.com/dsltools/SafetyApplicationLanguage">
+<safetyApplication Crc="1363407790" xmlns:dm0="http://schemas.microsoft.com/VisualStudio/2008/DslTools/Core" dslVersion="1.5.0.0" Id="e6bb3767-7d10-4d1a-a4ec-b58a8a61b79a" name="" mapState="false" mapDiag="false" groupOrderId="0" passificationAllowed="false" temporaryDeactivationAllowed="false" permamentDeactivationAllowed="false" xmlid="0" analogFBOutputReplacementValues="Zero" verifyAnalogFBInputsIfStart="false" userFbId="00000000-0000-0000-0000-000000000000" xmlns="http://schemas.microsoft.com/dsltools/SafetyApplicationLanguage">
   <networks>
     <safetyApplicationHasNetworks Id="fdec977b-3449-43d4-9a94-fde11657faed">
       <Network Id="472e6540-b5be-43f6-9349-4f14b401f0c6" name="Network1" networkName="Network1" intId="1" networkOrderId="0">
@@ -462,38 +462,6 @@
     </safetyApplicationHasTwinSAFEGroupAliasPort>
   </twinSAFEGroupAliasPorts>
   <variables>
-    <safetyApplicationHasVariables Id="088f4138-5d99-4af8-abec-945a3f2a10c7">
-      <variable Id="6b5f8ba5-2b67-4f61-9665-9775839f4292" name="GroupPort_ErrAck" isLocal="false">
-        <sourceUsages>
-          <variableHasSourceUsages Id="5a96bead-db5a-48f4-899b-fc352155e5d9">
-            <variableUsages Id="47fbf391-1ff3-4e5e-b5c7-6fd017f31b3d">
-              <usages>
-                <variableUsagesHasUsages Id="c42decf7-5159-4aa6-9299-975ab675391b">
-                  <aliasDeviceIoUsage Id="6ea8509b-3ad2-4fcd-b5bd-f96a67a020f3" sdsId="1" channelId="1" functionId="0" />
-                </variableUsagesHasUsages>
-              </usages>
-            </variableUsages>
-          </variableHasSourceUsages>
-        </sourceUsages>
-        <targetUsages>
-          <variableHasTargetUsages Id="879d2b53-fe15-4ce4-b4af-b187f0c66d07">
-            <variableUsages Id="f97b0bbb-ccb5-4087-89ce-7809bad4fcea">
-              <usages>
-                <variableUsagesHasUsages Id="1f717271-e550-462e-8dd9-e64d39c0af21">
-                  <groupPortUsage Id="578eb9ba-44f2-43c3-ae23-7f21b39d573c">
-                    <twinSAFEGroupAliasPort>
-                      <groupPortUsageReferencesTwinSAFEGroupAliasPort Id="a0f361f8-9d2f-4674-8bc1-e8ed745adccb">
-                        <twinSAFEGroupAliasPortMoniker name="//ErrAck" />
-                      </groupPortUsageReferencesTwinSAFEGroupAliasPort>
-                    </twinSAFEGroupAliasPort>
-                  </groupPortUsage>
-                </variableUsagesHasUsages>
-              </usages>
-            </variableUsages>
-          </variableHasTargetUsages>
-        </targetUsages>
-      </variable>
-    </safetyApplicationHasVariables>
     <safetyApplicationHasVariables Id="d45d3ef0-37f2-403f-a70b-af3419355a69">
       <variable Id="38a4dcc9-1655-48ee-8de9-e81d60025814" name="GroupPort_RunStop" isLocal="false">
         <sourceUsages>
@@ -624,6 +592,15 @@
                       </fbPortUsageReferencesFunctionBlockPort>
                     </functionBlockPort>
                   </fbPortUsage>
+                </variableUsagesHasUsages>
+                <variableUsagesHasUsages Id="1e9b2f9e-083a-4412-a958-867ada096156">
+                  <groupPortUsage Id="7d011ff7-0e3f-42ed-8adb-883f65787632">
+                    <twinSAFEGroupAliasPort>
+                      <groupPortUsageReferencesTwinSAFEGroupAliasPort Id="a03c9c5e-1727-4b81-a0f0-d122d25e5b14">
+                        <twinSAFEGroupAliasPortMoniker name="//ErrAck" />
+                      </groupPortUsageReferencesTwinSAFEGroupAliasPort>
+                    </twinSAFEGroupAliasPort>
+                  </groupPortUsage>
                 </variableUsagesHasUsages>
               </usages>
             </variableUsages>
