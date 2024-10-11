@@ -7,6 +7,7 @@ VAR_INPUT
 	bMoveToNext		: BOOL;
 	bMoveToStart	: BOOL;
 	bMoveToQueue	: BOOL;
+	toReset			: BOOL;
 END_VAR
 VAR_OUTPUT
 	CurrentMover	: UDINT;
@@ -26,6 +27,12 @@ IF PosLow < 0 THEN
 	PosLow	:= GVL.TRACK_LENGTH + PosLow;
 END_IF
 PosHigh		:= Position + ( GVL.stationTolerance / 2 );
+
+IF toReset THEN
+	Step := StationSequence.Idle;
+	toReset 		:= FALSE;
+END_IF
+
 
 CASE Step OF 
 	StationSequence.Idle:
@@ -87,7 +94,12 @@ END_CASE
 ]]></ST>
     </Implementation>
     <LineIds Name="Station">
-      <LineId Id="93" Count="8" />
+      <LineId Id="93" Count="6" />
+      <LineId Id="205" Count="2" />
+      <LineId Id="209" Count="0" />
+      <LineId Id="208" Count="0" />
+      <LineId Id="202" Count="0" />
+      <LineId Id="100" Count="1" />
       <LineId Id="180" Count="20" />
       <LineId Id="123" Count="2" />
       <LineId Id="127" Count="4" />

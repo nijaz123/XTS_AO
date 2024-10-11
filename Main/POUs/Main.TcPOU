@@ -44,8 +44,6 @@ VAR
 	M1DetectStep			: M1Detection;	
 	M1DetectAttemptCounter	: INT;
 	
-	iDummyLightCurtainTest	: INT;
-	bDummyLightCurtainTest	: BOOL;
 	bOperatorLoadingTrays	: BOOL;
 	bCurtainOneShot			: BOOL;
 END_VAR]]></Declaration>
@@ -66,11 +64,11 @@ FOR i := 1 TO GVL.NUM_MOVERS DO
 		allMoversNotMoving	:= TRUE;
 	END_IF
 	
-	
 END_FOR
 FOR i := 1 TO GVL.NUM_STATIONS DO
 	GVL.Station[i]();
 END_FOR
+
 FOR i := 1 TO gvl.NUM_ZONES DO
 	GVL.Zone[i]();
 END_FOR
@@ -81,7 +79,6 @@ IF HMI.ResetXTS_Error THEN
 	END_FOR
 	HMI.ResetXTS_Error := FALSE;
 END_IF
-
 
 // check for E-STOP
 bEstopPressed(CLK:=SafetyGVL.EStopStatus);
@@ -144,7 +141,7 @@ CASE Step OF
 		END_FOR
 	
 	IF allMoversHalted THEN
-		Step		:= XTSSequence.RemoveAxes;
+		Step := XTSSequence.RemoveAxes;
 	END_IF
 	
 //-----------------------------------------------------------------------------------------------------------------------	
@@ -172,6 +169,9 @@ CASE Step OF
 		GVL.Mover[i].toDisable := TRUE;
 	END_FOR
 	allMoversEnabled := FALSE;
+	FOR i:= 1 TO GVL.NUM_STATIONS DO
+		GVL.Station[i].toReset	:= TRUE;
+	END_FOR
 	Step := XTSSequence.Off;
 		
 //-----------------------------------------------------------------------------------------------------------------------			
@@ -227,36 +227,32 @@ CASE Step OF
 //-----------------------------------------------------------------------------------------------------------------------		
 	XTSSequence.StandBy:
 	IF Started THEN
-		// first time code executes this far (after power on) move to a start position
 		Started := FALSE;
 		Step	:= XTSSequence.Start;
 	ELSIF Resumed THEN
-		// any other time code executes here, resume operation where movers left off
 		Resumed := FALSE;
 		Step	:= XTSSequence.Run;
 	END_IF
 
 //-----------------------------------------------------------------------------------------------------------------------		
 	XTSSequence.Start:
-		// request all movers proceed to starting station
-IF bOperatorLoadingTrays = FALSE THEN
+	// request all movers proceed to starting station
+	IF bOperatorLoadingTrays = FALSE THEN
+		FOR i:= 1 TO GVL.NUM_MOVERS DO
+			GVL.Mover[i].toStart	:= TRUE;
+		END_FOR
+		Step	:= XTSSequence.Run;
+	ELSE
+		Step	:= XTSSequence.Run;
+	END_IF	
 	
-	FOR i:= 1 TO GVL.NUM_MOVERS DO
-		GVL.Mover[i].toStart	:= TRUE;
-	END_FOR
-	Step	:= XTSSequence.Run;
-ELSE
-	Step	:= XTSSequence.Run;
-END_IF	
 //-----------------------------------------------------------------------------------------------------------------------	
 	XTSSequence.Run:
-
-IF HMI.Stop = FALSE THEN
 	
 	// LOAD TRAY STATION
 	IF GVL.Station[1].Step = StationSequence.MoverPresent THEN
 		HMI.dsMoverControlFlags.loadTray_Busy := TRUE;
-		IF HMI.dsMoverControlFlags.loadTray_Complete THEN			//IF SENSOR IS TRUE PACKAGE IS PRESENT MOVER GOES TO NEXT STATION
+		IF HMI.dsMoverControlFlags.loadTray_Complete AND bOperatorLoadingTrays = FALSE AND HMI.Stop = FALSE THEN			//IF SENSOR IS TRUE PACKAGE IS PRESENT MOVER GOES TO NEXT STATION
 			HMI.dsMoverControlFlags.loadTray_Complete := FALSE;
 			GVL.Station[1].bMoveToNext := TRUE;
 		END_IF
@@ -267,7 +263,7 @@ IF HMI.Stop = FALSE THEN
 	// INSPECT TRAY STATION
 	IF GVL.Station[2].Step = StationSequence.MoverPresent THEN
 		HMI.dsMoverControlFlags.inspectTray_Busy := TRUE;
-		IF HMI.dsMoverControlFlags.inspectTray_Complate THEN			//IF SENSOR IS TRUE PACKAGE IS PRESENT MOVER GOES TO NEXT STATION
+		IF HMI.dsMoverControlFlags.inspectTray_Complate AND HMI.Stop = FALSE THEN			//IF SENSOR IS TRUE PACKAGE IS PRESENT MOVER GOES TO NEXT STATION
 			HMI.dsMoverControlFlags.inspectTray_Complate := FALSE;
 			GVL.Station[2].bMoveToNext := TRUE;
 		END_IF
@@ -278,7 +274,7 @@ IF HMI.Stop = FALSE THEN
 	// LOAD PARTS STATION 1
 	IF GVL.Station[3].Step = StationSequence.MoverPresent THEN
 		HMI.dsMoverControlFlags.loadArea1_Busy := TRUE;				//SIGNAL TO ROBOT 1 TO LOAD PARTS
-		IF HMI.dsMoverControlFlags.loadArea1_Complete THEN			//SIGNAL FROM ROBOT 1 PARTS COMPLETED
+		IF HMI.dsMoverControlFlags.loadArea1_Complete AND HMI.Stop = FALSE THEN			//SIGNAL FROM ROBOT 1 PARTS COMPLETED
 			HMI.dsMoverControlFlags.loadArea1_Complete := FALSE;
 			GVL.Station[3].bMoveToNext := TRUE;
 		END_IF
@@ -289,7 +285,7 @@ IF HMI.Stop = FALSE THEN
 	// LOAD PARTS STATION 2
 	IF GVL.Station[4].Step = StationSequence.MoverPresent THEN
 		HMI.dsMoverControlFlags.loadArea2_Busy := TRUE;				//SIGNAL TO ROBOT 2 TO LOAD PARTS
-		IF HMI.dsMoverControlFlags.loadArea2_Complete THEN			//SIGNAL FROM ROBOT 2 PARTS COMPLETED
+		IF HMI.dsMoverControlFlags.loadArea2_Complete AND HMI.Stop = FALSE THEN			//SIGNAL FROM ROBOT 2 PARTS COMPLETED
 			HMI.dsMoverControlFlags.loadArea2_Complete := FALSE;
 			GVL.Station[4].bMoveToNext := TRUE;
 		END_IF
@@ -300,7 +296,7 @@ IF HMI.Stop = FALSE THEN
 	// LOAD PARTS STATION 3
 	IF GVL.Station[5].Step = StationSequence.MoverPresent THEN
 		HMI.dsMoverControlFlags.loadArea3_Busy := TRUE;				//SIGNAL TO ROBOT 3 TO LOAD PARTS
-		IF HMI.dsMoverControlFlags.loadArea3_Complete THEN			//SIGNAL FROM ROBOT 3 PARTS COMPLETED
+		IF HMI.dsMoverControlFlags.loadArea3_Complete AND HMI.Stop = FALSE THEN			//SIGNAL FROM ROBOT 3 PARTS COMPLETED
 			HMI.dsMoverControlFlags.loadArea3_Complete := FALSE;
 			GVL.Station[5].bMoveToNext := TRUE;
 		END_IF
@@ -311,7 +307,7 @@ IF HMI.Stop = FALSE THEN
 	// LOAD PARTS STATION 4
 	IF GVL.Station[6].Step = StationSequence.MoverPresent THEN
 		HMI.dsMoverControlFlags.loadArea4_Busy := TRUE;				//SIGNAL TO ROBOT 4 TO LOAD PARTS
-		IF HMI.dsMoverControlFlags.loadArea4_Complete THEN			//SIGNAL FROM ROBOT 4 PARTS COMPLETED
+		IF HMI.dsMoverControlFlags.loadArea4_Complete AND HMI.Stop = FALSE THEN			//SIGNAL FROM ROBOT 4 PARTS COMPLETED
 			HMI.dsMoverControlFlags.loadArea4_Complete := FALSE;
 			GVL.Station[6].bMoveToNext := TRUE;
 		END_IF
@@ -322,14 +318,13 @@ IF HMI.Stop = FALSE THEN
 	// UNLOAD PARTS STATION 
 	IF GVL.Station[7].Step = StationSequence.MoverPresent THEN
 		HMI.dsMoverControlFlags.unloadTray_Busy := TRUE;			//SIGNAL TO ROBOT 5 TO UNLOAD TRAY
-		IF HMI.dsMoverControlFlags.unloadTray_Complete THEN			//SIGNAL FROM ROBOT 5 UNLOAD TRAY COMPLETED
+		IF HMI.dsMoverControlFlags.unloadTray_Complete AND HMI.Stop = FALSE THEN			//SIGNAL FROM ROBOT 5 UNLOAD TRAY COMPLETED
 			HMI.dsMoverControlFlags.unloadTray_Complete := FALSE;
 			IF bOperatorLoadingTrays THEN
 				GVL.Station[7].bMoveToNext := TRUE;					//Send to Queue Movers Station
 			ELSE
 				GVL.Station[7].bMoveToStart := TRUE;				//Send to Load Tray Station
 			END_IF
-
 		END_IF
 	ELSE
 		HMI.dsMoverControlFlags.unloadTray_Busy := FALSE;
@@ -337,7 +332,7 @@ IF HMI.Stop = FALSE THEN
 	
 	// Queue Station used only if Operator is in Zone 1
 	IF GVL.Station[8].Step = StationSequence.MoverPresent THEN
-		IF bOperatorLoadingTrays = FALSE THEN			
+		IF bOperatorLoadingTrays = FALSE AND HMI.Stop = FALSE THEN			
 			GVL.Station[8].bMoveToStart := TRUE;
 		END_IF
 	END_IF
@@ -345,18 +340,17 @@ IF HMI.Stop = FALSE THEN
 	// Starting over on the condition that movers are stationary and HMI.Startover has been pressed.
 	IF allMoversNotMoving THEN				
 		IF HMI.Start THEN
-			FOR i := 2 TO GVL.NUM_STATIONS DO
-				IF GVL.Station[i].Step = StationSequence.MoverPresent THEN
-				GVL.Station[i].bMoveToStart := TRUE;
+			FOR i := 1 TO GVL.NUM_MOVERS DO
+				IF GVL.Mover[i].Position > GVL.Station[1].Position + 20 AND GVL.Mover[i].Position < GVL.Station[8].Position + 20 THEN
+					GVL.Mover[i].toStart := TRUE;
 				END_IF
 			END_FOR	
+			FOR i := 1 TO GVL.NUM_STATIONS DO
+				GVL.Station[i].toReset		:= TRUE;
+			END_FOR
 			HMI.Start := FALSE;
 		END_IF
 	END_IF
-ELSE
-	Step	:= XTSSequence.Paused;
-END_IF
-
 END_CASE
 
 fbEnableGroup(AxesGroup	:= stCaGroupRef);
@@ -583,14 +577,16 @@ END_IF]]></ST>
     </Action>
     <LineIds Name="Main">
       <LineId Id="1" Count="14" />
-      <LineId Id="659" Count="0" />
-      <LineId Id="16" Count="7" />
+      <LineId Id="672" Count="0" />
+      <LineId Id="17" Count="3" />
+      <LineId Id="673" Count="0" />
+      <LineId Id="21" Count="2" />
       <LineId Id="521" Count="0" />
       <LineId Id="520" Count="0" />
       <LineId Id="522" Count="0" />
       <LineId Id="524" Count="2" />
       <LineId Id="523" Count="0" />
-      <LineId Id="513" Count="3" />
+      <LineId Id="514" Count="2" />
       <LineId Id="26" Count="0" />
       <LineId Id="357" Count="0" />
       <LineId Id="519" Count="0" />
@@ -613,37 +609,39 @@ END_IF]]></ST>
       <LineId Id="379" Count="0" />
       <LineId Id="74" Count="41" />
       <LineId Id="654" Count="0" />
-      <LineId Id="116" Count="56" />
+      <LineId Id="116" Count="8" />
+      <LineId Id="678" Count="1" />
+      <LineId Id="677" Count="0" />
+      <LineId Id="125" Count="47" />
       <LineId Id="660" Count="0" />
-      <LineId Id="173" Count="18" />
-      <LineId Id="656" Count="0" />
-      <LineId Id="192" Count="2" />
+      <LineId Id="173" Count="5" />
+      <LineId Id="180" Count="2" />
+      <LineId Id="184" Count="10" />
       <LineId Id="206" Count="0" />
       <LineId Id="657" Count="1" />
-      <LineId Id="208" Count="2" />
-      <LineId Id="374" Count="0" />
-      <LineId Id="360" Count="1" />
+      <LineId Id="208" Count="0" />
+      <LineId Id="680" Count="0" />
+      <LineId Id="209" Count="1" />
+      <LineId Id="361" Count="0" />
       <LineId Id="217" Count="9" />
       <LineId Id="318" Count="0" />
       <LineId Id="320" Count="8" />
       <LineId Id="319" Count="0" />
-      <LineId Id="227" Count="66" />
+      <LineId Id="227" Count="54" />
+      <LineId Id="283" Count="10" />
       <LineId Id="397" Count="0" />
       <LineId Id="333" Count="0" />
       <LineId Id="329" Count="0" />
       <LineId Id="295" Count="0" />
       <LineId Id="315" Count="0" />
       <LineId Id="331" Count="0" />
-      <LineId Id="316" Count="0" />
+      <LineId Id="681" Count="0" />
       <LineId Id="332" Count="0" />
       <LineId Id="298" Count="0" />
+      <LineId Id="682" Count="2" />
       <LineId Id="317" Count="0" />
       <LineId Id="300" Count="0" />
       <LineId Id="330" Count="0" />
-      <LineId Id="371" Count="0" />
-      <LineId Id="373" Count="0" />
-      <LineId Id="362" Count="0" />
-      <LineId Id="364" Count="0" />
       <LineId Id="363" Count="0" />
       <LineId Id="303" Count="3" />
       <LineId Id="415" Count="0" />
