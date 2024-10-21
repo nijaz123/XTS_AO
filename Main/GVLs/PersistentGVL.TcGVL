@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.8">
+  <GVL Name="PersistentGVL" Id="{3c35753e-22e1-0de6-095d-9d3bb5ac4669}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+
+VAR_GLOBAL RETAIN
+	
+TimesAroundTrackCounter		: INT;
+
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

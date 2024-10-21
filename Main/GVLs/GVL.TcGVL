@@ -14,14 +14,13 @@ VAR_GLOBAL CONSTANT
 
 	// Station constants
 	startStation				: USINT	:= 1;		// set this number to the index of the station all movers should start from
-	stationTolerance			: LREAL	:= 0.5;		// set to number of millimeters tolerance for mover at station
+	stationTolerance			: LREAL	:= 1;		// set to number of millimeters tolerance for mover at station
 	zeroSpeed					: LREAL	:= 10.0;	// tolerance for definition of not moving
 END_VAR
 
 VAR_GLOBAL
 	Mover					: ARRAY[1..GVL.NUM_MOVERS] OF Mover;
 	Station					: ARRAY[1..GVL.NUM_STATIONS] OF station;
-	Zone					: ARRAY[1..GVL.NUM_ZONES] OF zone;
 	dsMoverControlFlags		: MoverControlFlags;
 END_VAR]]></Declaration>
   </GVL>

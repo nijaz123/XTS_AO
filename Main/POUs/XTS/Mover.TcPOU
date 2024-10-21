@@ -75,15 +75,15 @@ END_VAR
 	
 
 CASE Step OF
-	//-----------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------
 	MoverSequence.Reset:	
 	
-	fbReset.Execute := TRUE;
-	IF fbReset.Busy THEN
-		Step := MoverSequence.Resetting;
-	END_IF
+		fbReset.Execute := TRUE;
+		IF fbReset.Busy THEN
+			Step := MoverSequence.Resetting;
+		END_IF
 	
-	//-----------------------------------------------------------------------------------------------------------------------
+//---------------------------------
 	MoverSequence.Resetting:	
 	
 	IF fbReset.Done THEN
@@ -91,16 +91,16 @@ CASE Step OF
 		Step := MoverSequence.Waiting;
 	END_IF
 
-	//-----------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------
 	MoverSequence.MovingToQueue:	
 	
-	IF NOT fbMoveAbsCA.Busy AND NOT fbMoveAbsCA.Done THEN			//Add additional condition that the doors are not unlcoked
+		IF NOT fbMoveAbsCA.Busy AND NOT fbMoveAbsCA.Done THEN			//Add additional condition that the doors are not unlcoked
 			fbMoveAbsCA.Execute			:= TRUE;
 			fbMoveAbsCA.Position		:= GVL.Station[GVL.startStation].Position+2000;
 			fbMoveAbsCA.Velocity		:= MoveCommandVel;										// parameterize
 			fbMoveAbsCA.Direction		:= MC_Positive_Direction;						// usually positive
 		END_IF
-		// check for error
+			// check for error
 		IF fbMoveAbsCA.Error THEN
 			Error				:= fbMoveAbsCA.ErrorId;
 			Step				:= MoverSequence.Error;
@@ -116,18 +116,18 @@ CASE Step OF
 			Step							:= MoverSequence.AtQueue;
 		END_IF
 		
-	//-----------------------------------------------------------------------------------------------------------------------
+//---------------------------------
 	MoverSequence.AtQueue:	
 	
-	IF fbMoveAbsCABlended.Busy THEN
-		fbMoveAbsCABlended.Execute			:= FALSE;
-		fbMoveAbsCA.Execute					:= FALSE;
-		Step								:= MoverSequence.MovingToStart;
-	END_IF
+		IF fbMoveAbsCABlended.Busy THEN
+			fbMoveAbsCABlended.Execute			:= FALSE;
+			fbMoveAbsCA.Execute					:= FALSE;
+			Step								:= MoverSequence.MovingToStart;
+		END_IF
 	
 //-----------------------------------------------------------------------------------------------------------------------
 	MoverSequence.Stopping:	
-	
+		//RESULT OF PRESSING ESTOP
 		IF fbHaltCA.Done OR AxisReference.Status.StandStill OR AxisReference.Status.NotMoving THEN
 			fbHaltCA.Execute 	:= FALSE;
 			toStart				:= FALSE;
@@ -136,21 +136,21 @@ CASE Step OF
 			Step := MoverSequence.Disabling;
 		END_IF
 			
-//-----------------------------------------------------------------------------------------------------------------------
-	MoverSequence.Disabling:		//RESULT OF PRESSING STOP
-	 
-	 IF toDisable THEN
-		Enable						:= FALSE;
-		fbPower.Enable				:= FALSE;
-		fbPower.Enable_Positive		:= FALSE;
-		fbPower.Enable_Negative		:= FALSE;
-		fbPower.BufferMode			:= MC_Aborting;
-		fbPower.Override			:= 100;
-		IF AxisReference.Status.Disabled THEN
-			toDisable := FALSE;
-			Step := MoverSequence.Off;
+//---------------------------------
+	MoverSequence.Disabling:		
+	 	//RESULT OF PRESSING ESTOP
+		IF toDisable THEN
+			Enable						:= FALSE;
+			fbPower.Enable				:= FALSE;
+			fbPower.Enable_Positive		:= FALSE;
+			fbPower.Enable_Negative		:= FALSE;
+			fbPower.BufferMode			:= MC_Aborting;
+			fbPower.Override			:= 100;
+			IF AxisReference.Status.Disabled THEN
+				toDisable := FALSE;
+				Step := MoverSequence.Off;
+			END_IF
 		END_IF
-	END_IF
 			
 //-----------------------------------------------------------------------------------------------------------------------
 	MoverSequence.Pausing:	
@@ -163,7 +163,7 @@ CASE Step OF
 			Step := MoverSequence.OFF;
 		END_IF
 
-//-----------------------------------------------------------------------------------------------------------------------
+//---------------------------------
 	MoverSequence.Off:
 		// when enable request is true, use MC_Power function block
 		IF Enable THEN
@@ -174,7 +174,7 @@ CASE Step OF
 			Step	:= MoverSequence.Idle;
 		END_IF
 		
-//-----------------------------------------------------------------------------------------------------------------------	
+//---------------------------------	
 	MoverSequence.Idle:
 		// ready and awaiting either toStart or toNext
 		IF toStart THEN
@@ -188,10 +188,10 @@ CASE Step OF
 	MoverSequence.MovingToStart:
 		// move absolute with collision avoidance to start station
 		IF NOT fbMoveAbsCA.Busy AND NOT fbMoveAbsCA.Done THEN	
-			fbMoveAbsCA.Execute			:= TRUE;
-			fbMoveAbsCA.Position		:= GVL.Station[GVL.startStation].Position;
-			fbMoveAbsCA.Velocity		:= MoveCommandVel;							// parameterize
-			fbMoveAbsCA.Direction		:= MC_Positive_Direction;		// usually positive
+			fbMoveAbsCA.Execute		:= TRUE;
+			fbMoveAbsCA.Position	:= GVL.Station[GVL.startStation].Position;
+			fbMoveAbsCA.Velocity	:= MoveCommandVel;							// parameterize
+			fbMoveAbsCA.Direction	:= MC_Positive_Direction;		// usually positive
 		END_IF
 		// check for error
 		IF fbMoveAbsCA.Error THEN
@@ -215,7 +215,6 @@ CASE Step OF
 			Step						:= MoverSequence.AtStart;
 		END_IF
 		
-		
 //-----------------------------------------------------------------------------------------------------------------------	
 	MoverSequence.AtStart:
 		toStart					:= FALSE;							//Add additional condition that the doors are not unlcoked
@@ -230,13 +229,14 @@ CASE Step OF
 			END_IF
 			Step				:= MoverSequence.MovingToStation;
 		END_IF
+		
 //-----------------------------------------------------------------------------------------------------------------------	
 	MoverSequence.MovingToStation:
 		// move absolute with collision avoidance to next station		//Add additional condition that the doors are not unlcoked
-		fbMoveAbsCA.Execute					:= TRUE;
-				fbMoveAbsCA.Position		:= GVL.Station[TargetStation].Position;
-				fbMoveAbsCA.Velocity		:= 100;										// parameterize
-				fbMoveAbsCA.Direction		:= MC_Positive_Direction;					// usually positive
+		fbMoveAbsCA.Execute		:= TRUE;
+		fbMoveAbsCA.Position	:= GVL.Station[TargetStation].Position;
+		fbMoveAbsCA.Velocity	:= 100;										// parameterize
+		fbMoveAbsCA.Direction	:= MC_Positive_Direction;					// usually positive
 		// check for error
 		IF fbMoveAbsCA.Error THEN
 			Error				:= fbMoveAbsCA.ErrorId;
@@ -257,7 +257,6 @@ CASE Step OF
 			toNext						:= FALSE;
 			Step						:= MoverSequence.AtStation;
 		END_IF
-		
 		
 //-----------------------------------------------------------------------------------------------------------------------	
 	MoverSequence.AtStation:
@@ -393,7 +392,6 @@ END_CASE
       <LineId Id="53" Count="0" />
       <LineId Id="52" Count="0" />
       <LineId Id="240" Count="0" />
-      <LineId Id="565" Count="0" />
       <LineId Id="67" Count="3" />
       <LineId Id="72" Count="1" />
       <LineId Id="79" Count="0" />
@@ -404,6 +402,7 @@ END_CASE
       <LineId Id="76" Count="0" />
       <LineId Id="81" Count="0" />
       <LineId Id="74" Count="0" />
+      <LineId Id="575" Count="0" />
       <LineId Id="82" Count="2" />
       <LineId Id="86" Count="0" />
       <LineId Id="90" Count="1" />
@@ -417,7 +416,6 @@ END_CASE
       <LineId Id="108" Count="1" />
       <LineId Id="88" Count="0" />
       <LineId Id="574" Count="0" />
-      <LineId Id="563" Count="0" />
       <LineId Id="110" Count="1" />
       <LineId Id="114" Count="9" />
       <LineId Id="113" Count="0" />

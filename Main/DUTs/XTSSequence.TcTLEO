@@ -3,6 +3,7 @@
   <EnumerationTextList Name="XTSSequence" Id="{46e9b238-637a-00fe-2d2b-4dec3a84e530}">
     <Declaration><![CDATA[{attribute 'qualified_only'}
 {attribute 'strict'}
+{attribute 'to_string'}
 TYPE XTSSequence :
 (
 	Off,

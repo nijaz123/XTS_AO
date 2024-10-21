@@ -1,0 +1,177 @@
+<?xml version="1.0"?>
+<VarLinks>
+	<OwnerA Name="InputDst" Prefix="TIPC^Main^Main Instance" Type="1">
+		<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 1 (EK1100)^Term 16 (EL2911)">
+			<Link VarA="SafetyGVL.AllSafetyOK" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="StandardInputs^Standard Out Var 9" Size="1"/>
+			<Link VarA="SafetyGVL.CurtainsOK" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="StandardInputs^Standard Out Var 12" Size="1"/>
+			<Link VarA="SafetyGVL.DoorsLocked" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="StandardInputs^Standard Out Var 16" Size="1"/>
+			<Link VarA="SafetyGVL.EStopStatus" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="StandardInputs^Standard Out Var 15" Size="1"/>
+		</OwnerB>
+		<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 1 (EK1100)^Term 3 (EL1809)">
+			<Link VarA="IOGVL.iCircuitBreaker24VDC" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 1^Input" Size="1"/>
+			<Link VarA="IOGVL.iCircuitBreakerSafety" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 2^Input" Size="1"/>
+			<Link VarA="IOGVL.iLubricationOn" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 9^Input" Size="1"/>
+			<Link VarA="IOGVL.iXTS_Module1" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 3^Input" Size="1"/>
+			<Link VarA="IOGVL.iXTS_Module2" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 4^Input" Size="1"/>
+			<Link VarA="IOGVL.iXTS_Module3" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 5^Input" Size="1"/>
+			<Link VarA="IOGVL.iXTS_Module4" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 6^Input" Size="1"/>
+			<Link VarA="IOGVL.iXTS_Module5" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 7^Input" Size="1"/>
+			<Link VarA="IOGVL.iXTS_Module6" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 8^Input" Size="1"/>
+		</OwnerB>
+		<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 1 (EK1100)^Term 4 (EL1809)">
+			<Link VarA="IOGVL.iBrakeResistorON" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 12^Input" Size="1"/>
+			<Link VarA="IOGVL.iLubricationDone" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 5^Input" Size="1"/>
+			<Link VarA="IOGVL.iLubricationLevelOK" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 4^Input" Size="1"/>
+			<Link VarA="IOGVL.iPowerSupply48VDC1" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 1^Input" Size="1"/>
+			<Link VarA="IOGVL.iPowerSupply48VDC2" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 2^Input" Size="1"/>
+			<Link VarA="IOGVL.iPowerSupply48VDC3" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 3^Input" Size="1"/>
+		</OwnerB>
+		<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 1 (EK1100)^Term 8 (EL1809)">
+			<Link VarA="IOGVL.iDoor1Opened" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 2^Input" Size="1"/>
+			<Link VarA="IOGVL.iDoor2Opened" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 3^Input" Size="1"/>
+			<Link VarA="IOGVL.iDoor3Opened" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 4^Input" Size="1"/>
+			<Link VarA="IOGVL.iDoor4Opened" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 5^Input" Size="1"/>
+			<Link VarA="IOGVL.iMainAirPressure" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 6^Input" Size="1"/>
+			<Link VarA="IOGVL.iTrayDetectSensor" GrpA="PlcTask Inputs" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 1^Input" Size="1"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 1">
+			<Link VarA="GVL.Mover[1].AxisReference.NcToPlc" GrpA="PlcTask Inputs" TypeA="MC.NCTOPLC_AXIS_REF" InOutA="0" GuidA="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" VarB="Outputs^ToPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 10">
+			<Link VarA="GVL.Mover[10].AxisReference.NcToPlc" GrpA="PlcTask Inputs" TypeA="MC.NCTOPLC_AXIS_REF" InOutA="0" GuidA="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" VarB="Outputs^ToPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 11">
+			<Link VarA="GVL.Mover[11].AxisReference.NcToPlc" GrpA="PlcTask Inputs" TypeA="MC.NCTOPLC_AXIS_REF" InOutA="0" GuidA="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" VarB="Outputs^ToPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 12">
+			<Link VarA="GVL.Mover[12].AxisReference.NcToPlc" GrpA="PlcTask Inputs" TypeA="MC.NCTOPLC_AXIS_REF" InOutA="0" GuidA="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" VarB="Outputs^ToPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 13">
+			<Link VarA="GVL.Mover[13].AxisReference.NcToPlc" GrpA="PlcTask Inputs" TypeA="MC.NCTOPLC_AXIS_REF" InOutA="0" GuidA="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" VarB="Outputs^ToPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 14">
+			<Link VarA="GVL.Mover[14].AxisReference.NcToPlc" GrpA="PlcTask Inputs" TypeA="MC.NCTOPLC_AXIS_REF" InOutA="0" GuidA="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" VarB="Outputs^ToPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 15">
+			<Link VarA="GVL.Mover[15].AxisReference.NcToPlc" GrpA="PlcTask Inputs" TypeA="MC.NCTOPLC_AXIS_REF" InOutA="0" GuidA="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" VarB="Outputs^ToPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 16">
+			<Link VarA="GVL.Mover[16].AxisReference.NcToPlc" GrpA="PlcTask Inputs" TypeA="MC.NCTOPLC_AXIS_REF" InOutA="0" GuidA="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" VarB="Outputs^ToPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 17">
+			<Link VarA="GVL.Mover[17].AxisReference.NcToPlc" GrpA="PlcTask Inputs" TypeA="MC.NCTOPLC_AXIS_REF" InOutA="0" GuidA="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" VarB="Outputs^ToPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 18">
+			<Link VarA="GVL.Mover[18].AxisReference.NcToPlc" GrpA="PlcTask Inputs" TypeA="MC.NCTOPLC_AXIS_REF" InOutA="0" GuidA="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" VarB="Outputs^ToPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 19">
+			<Link VarA="GVL.Mover[19].AxisReference.NcToPlc" GrpA="PlcTask Inputs" TypeA="MC.NCTOPLC_AXIS_REF" InOutA="0" GuidA="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" VarB="Outputs^ToPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 2">
+			<Link VarA="GVL.Mover[2].AxisReference.NcToPlc" GrpA="PlcTask Inputs" TypeA="MC.NCTOPLC_AXIS_REF" InOutA="0" GuidA="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" VarB="Outputs^ToPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 20">
+			<Link VarA="GVL.Mover[20].AxisReference.NcToPlc" GrpA="PlcTask Inputs" TypeA="MC.NCTOPLC_AXIS_REF" InOutA="0" GuidA="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" VarB="Outputs^ToPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 3">
+			<Link VarA="GVL.Mover[3].AxisReference.NcToPlc" GrpA="PlcTask Inputs" TypeA="MC.NCTOPLC_AXIS_REF" InOutA="0" GuidA="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" VarB="Outputs^ToPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 4">
+			<Link VarA="GVL.Mover[4].AxisReference.NcToPlc" GrpA="PlcTask Inputs" TypeA="MC.NCTOPLC_AXIS_REF" InOutA="0" GuidA="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" VarB="Outputs^ToPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 5">
+			<Link VarA="GVL.Mover[5].AxisReference.NcToPlc" GrpA="PlcTask Inputs" TypeA="MC.NCTOPLC_AXIS_REF" InOutA="0" GuidA="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" VarB="Outputs^ToPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 6">
+			<Link VarA="GVL.Mover[6].AxisReference.NcToPlc" GrpA="PlcTask Inputs" TypeA="MC.NCTOPLC_AXIS_REF" InOutA="0" GuidA="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" VarB="Outputs^ToPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 7">
+			<Link VarA="GVL.Mover[7].AxisReference.NcToPlc" GrpA="PlcTask Inputs" TypeA="MC.NCTOPLC_AXIS_REF" InOutA="0" GuidA="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" VarB="Outputs^ToPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 8">
+			<Link VarA="GVL.Mover[8].AxisReference.NcToPlc" GrpA="PlcTask Inputs" TypeA="MC.NCTOPLC_AXIS_REF" InOutA="0" GuidA="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" VarB="Outputs^ToPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 9">
+			<Link VarA="GVL.Mover[9].AxisReference.NcToPlc" GrpA="PlcTask Inputs" TypeA="MC.NCTOPLC_AXIS_REF" InOutA="0" GuidA="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" VarB="Outputs^ToPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Objects^Collision Avoidance">
+			<Link VarA="Main.stCaGroupRef.NcToPlc^CA" GrpA="PlcTask Inputs" TypeA="MC.CDT_MCTOPLC_GROUP_CA" InOutA="0" ParentTypeA="CDT_MCTOPLC_GROUP" GuidA="{260A4C07-588B-43A4-9DE1-0381D61130FD}" VarB="Group Outputs^ToPLC"/>
+		</OwnerB>
+	</OwnerA>
+	<OwnerA Name="OutputSrc" Prefix="TIPC^Main^Main Instance" Type="2">
+		<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 1 (EK1100)^Term 11 (EL2008)">
+			<Link VarA="IOGVL.oConveyor" GrpA="PlcTask Outputs" TypeA="BOOL" InOutA="1" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 2^Output" Size="1"/>
+			<Link VarA="IOGVL.oEStopLight" GrpA="PlcTask Outputs" TypeA="BOOL" InOutA="1" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 1^Output" Size="1"/>
+		</OwnerB>
+		<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 1 (EK1100)^Term 16 (EL2911)">
+			<Link VarA="HMI.LockDoors" GrpA="PlcTask Outputs" TypeA="BOOL" InOutA="1" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="StandardOutputs^Standard In Var 14" Size="1"/>
+			<Link VarA="SafetyGVL.run" GrpA="PlcTask Outputs" TypeA="BOOL" InOutA="1" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="StandardOutputs^Standard In Var 2" Size="1"/>
+		</OwnerB>
+		<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 1 (EK1100)^Term 7 (EL2042)">
+			<Link VarA="IOGVL.oLubeON" GrpA="PlcTask Outputs" TypeA="BOOL" InOutA="1" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 1^Output" Size="1"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 1">
+			<Link VarA="GVL.Mover[1].AxisReference.PlcToNc" GrpA="PlcTask Outputs" TypeA="MC.PLCTONC_AXIS_REF" InOutA="1" GuidA="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" VarB="Inputs^FromPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 10">
+			<Link VarA="GVL.Mover[10].AxisReference.PlcToNc" GrpA="PlcTask Outputs" TypeA="MC.PLCTONC_AXIS_REF" InOutA="1" GuidA="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" VarB="Inputs^FromPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 11">
+			<Link VarA="GVL.Mover[11].AxisReference.PlcToNc" GrpA="PlcTask Outputs" TypeA="MC.PLCTONC_AXIS_REF" InOutA="1" GuidA="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" VarB="Inputs^FromPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 12">
+			<Link VarA="GVL.Mover[12].AxisReference.PlcToNc" GrpA="PlcTask Outputs" TypeA="MC.PLCTONC_AXIS_REF" InOutA="1" GuidA="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" VarB="Inputs^FromPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 13">
+			<Link VarA="GVL.Mover[13].AxisReference.PlcToNc" GrpA="PlcTask Outputs" TypeA="MC.PLCTONC_AXIS_REF" InOutA="1" GuidA="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" VarB="Inputs^FromPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 14">
+			<Link VarA="GVL.Mover[14].AxisReference.PlcToNc" GrpA="PlcTask Outputs" TypeA="MC.PLCTONC_AXIS_REF" InOutA="1" GuidA="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" VarB="Inputs^FromPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 15">
+			<Link VarA="GVL.Mover[15].AxisReference.PlcToNc" GrpA="PlcTask Outputs" TypeA="MC.PLCTONC_AXIS_REF" InOutA="1" GuidA="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" VarB="Inputs^FromPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 16">
+			<Link VarA="GVL.Mover[16].AxisReference.PlcToNc" GrpA="PlcTask Outputs" TypeA="MC.PLCTONC_AXIS_REF" InOutA="1" GuidA="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" VarB="Inputs^FromPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 17">
+			<Link VarA="GVL.Mover[17].AxisReference.PlcToNc" GrpA="PlcTask Outputs" TypeA="MC.PLCTONC_AXIS_REF" InOutA="1" GuidA="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" VarB="Inputs^FromPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 18">
+			<Link VarA="GVL.Mover[18].AxisReference.PlcToNc" GrpA="PlcTask Outputs" TypeA="MC.PLCTONC_AXIS_REF" InOutA="1" GuidA="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" VarB="Inputs^FromPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 19">
+			<Link VarA="GVL.Mover[19].AxisReference.PlcToNc" GrpA="PlcTask Outputs" TypeA="MC.PLCTONC_AXIS_REF" InOutA="1" GuidA="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" VarB="Inputs^FromPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 2">
+			<Link VarA="GVL.Mover[2].AxisReference.PlcToNc" GrpA="PlcTask Outputs" TypeA="MC.PLCTONC_AXIS_REF" InOutA="1" GuidA="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" VarB="Inputs^FromPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 20">
+			<Link VarA="GVL.Mover[20].AxisReference.PlcToNc" GrpA="PlcTask Outputs" TypeA="MC.PLCTONC_AXIS_REF" InOutA="1" GuidA="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" VarB="Inputs^FromPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 3">
+			<Link VarA="GVL.Mover[3].AxisReference.PlcToNc" GrpA="PlcTask Outputs" TypeA="MC.PLCTONC_AXIS_REF" InOutA="1" GuidA="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" VarB="Inputs^FromPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 4">
+			<Link VarA="GVL.Mover[4].AxisReference.PlcToNc" GrpA="PlcTask Outputs" TypeA="MC.PLCTONC_AXIS_REF" InOutA="1" GuidA="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" VarB="Inputs^FromPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 5">
+			<Link VarA="GVL.Mover[5].AxisReference.PlcToNc" GrpA="PlcTask Outputs" TypeA="MC.PLCTONC_AXIS_REF" InOutA="1" GuidA="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" VarB="Inputs^FromPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 6">
+			<Link VarA="GVL.Mover[6].AxisReference.PlcToNc" GrpA="PlcTask Outputs" TypeA="MC.PLCTONC_AXIS_REF" InOutA="1" GuidA="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" VarB="Inputs^FromPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 7">
+			<Link VarA="GVL.Mover[7].AxisReference.PlcToNc" GrpA="PlcTask Outputs" TypeA="MC.PLCTONC_AXIS_REF" InOutA="1" GuidA="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" VarB="Inputs^FromPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 8">
+			<Link VarA="GVL.Mover[8].AxisReference.PlcToNc" GrpA="PlcTask Outputs" TypeA="MC.PLCTONC_AXIS_REF" InOutA="1" GuidA="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" VarB="Inputs^FromPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Axes^Mover Axis 9">
+			<Link VarA="GVL.Mover[9].AxisReference.PlcToNc" GrpA="PlcTask Outputs" TypeA="MC.PLCTONC_AXIS_REF" InOutA="1" GuidA="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" VarB="Inputs^FromPlc"/>
+		</OwnerB>
+		<OwnerB Name="TINC^NC SAF^Objects^Collision Avoidance">
+			<Link VarA="Main.stCaGroupRef.PlcToNc^CA" GrpA="PlcTask Outputs" TypeA="MC.CDT_PLCTOMC_GROUP_CA" InOutA="1" ParentTypeA="CDT_PLCTOMC_GROUP" GuidA="{BAE35DD4-8FAE-4745-9207-33776C056045}" VarB="Group Inputs^FromPLC"/>
+		</OwnerB>
+	</OwnerA>
+</VarLinks>
